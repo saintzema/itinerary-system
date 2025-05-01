@@ -928,7 +928,7 @@ function CreateEvent() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow" data-testid="create-event-form">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="col-span-2">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">

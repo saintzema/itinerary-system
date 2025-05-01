@@ -15,6 +15,7 @@ class ItineraryAPITester:
         self.test_email = f"{self.test_user}@example.com"
         self.test_full_name = "Test User"
         self.event_id = None
+        self.notification_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""

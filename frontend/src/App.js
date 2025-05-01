@@ -1829,7 +1829,7 @@ function Reports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportType, dateRange]);
 
   useEffect(() => {
     fetchEventData();

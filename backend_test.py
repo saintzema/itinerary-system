@@ -219,6 +219,64 @@ class ItineraryAPITester:
             200
         )
         return success
+        
+    def test_get_notifications(self):
+        """Test getting user notifications"""
+        success, response = self.run_test(
+            "Get Notifications",
+            "GET",
+            "notifications",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"Retrieved {len(response)} notifications")
+            if len(response) > 0:
+                self.notification_id = response[0]["id"]
+                print(f"First notification: {response[0]['title']} - {response[0]['message']}")
+                print(f"Read status: {response[0]['read']}")
+                return True
+            else:
+                print("No notifications found")
+                return False
+        return False
+        
+    def test_mark_notification_as_read(self):
+        """Test marking a notification as read"""
+        if not self.notification_id:
+            print("❌ No notification ID available for testing")
+            return False
+            
+        success, _ = self.run_test(
+            "Mark Notification as Read",
+            "PUT",
+            f"notifications/{self.notification_id}/read",
+            200
+        )
+        
+        if success:
+            # Verify the notification is now marked as read
+            get_success, response = self.run_test(
+                "Verify Notification Read Status",
+                "GET",
+                "notifications",
+                200
+            )
+            
+            if get_success and isinstance(response, list):
+                for notification in response:
+                    if notification["id"] == self.notification_id:
+                        if notification["read"]:
+                            print("✅ Notification successfully marked as read")
+                            return True
+                        else:
+                            print("❌ Notification not marked as read")
+                            return False
+            
+            print("❌ Could not verify notification read status")
+            return False
+        
+        return False
 
     def run_all_tests(self):
         """Run all API tests"""

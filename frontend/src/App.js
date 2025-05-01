@@ -1342,18 +1342,21 @@ function Calendar() {
             <button 
               onClick={prevMonth}
               className="px-3 py-1 border rounded hover:bg-gray-100"
+              data-testid="prev-month-button"
             >
               &#8592; Prev
             </button>
             <button 
               onClick={goToToday}
               className="px-3 py-1 border rounded hover:bg-gray-100"
+              data-testid="today-button"
             >
               Today
             </button>
             <button 
               onClick={nextMonth}
               className="px-3 py-1 border rounded hover:bg-gray-100"
+              data-testid="next-month-button"
             >
               Next &#8594;
             </button>

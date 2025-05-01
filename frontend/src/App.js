@@ -785,6 +785,12 @@ function Dashboard() {
           Create New Event
         </Link>
       </div>
+      
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" data-testid="success-message">
+          {successMessage}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-4">Loading...</div>

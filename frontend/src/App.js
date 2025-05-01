@@ -1781,7 +1781,8 @@ function Reports() {
     end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   });
 
-  const fetchEventData = async () => {
+  // Use useCallback to memoize the fetchEventData function
+  const fetchEventData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");

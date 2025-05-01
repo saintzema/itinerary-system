@@ -291,6 +291,9 @@ function Header() {
                 <li>
                   <Link to="/calendar" className="hover:text-gray-300">Calendar</Link>
                 </li>
+                <li>
+                  <Link to="/reports" className="hover:text-gray-300">Reports</Link>
+                </li>
                 {(user.role === "admin" || user.role === "staff") && (
                   <li>
                     <Link to="/manage-users" className="hover:text-gray-300">Manage Users</Link>

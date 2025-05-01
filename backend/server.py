@@ -858,6 +858,43 @@ async def debug_events():
         ] if all_events else []
     }
 
+@api_router.post("/debug/create-test-event")
+async def create_test_event():
+    """Create a test event for debugging purposes"""
+    # Find the test user
+    test_user = await get_user_by_username("testuser")
+    if not test_user:
+        return {"message": "Test user not found. Please create a test user first."}
+    
+    # Create a test event
+    now = datetime.utcnow()
+    start_time = now + timedelta(hours=1)
+    end_time = now + timedelta(hours=2)
+    
+    new_event = Event(
+        title="Test Event",
+        description="This is a test event created for debugging purposes",
+        start_time=start_time,
+        end_time=end_time,
+        venue="Test Venue",
+        priority=PriorityLevel.HIGH,
+        recurrence=RecurrenceType.NONE,
+        created_by=test_user["id"],
+        participants=[]
+    )
+    
+    result = await db.events.insert_one(jsonable_encoder(new_event))
+    created_event = await db.events.find_one({"_id": result.inserted_id})
+    
+    return {
+        "message": "Test event created successfully",
+        "event_id": created_event["id"],
+        "title": created_event["title"],
+        "start_time": created_event["start_time"],
+        "end_time": created_event["end_time"],
+        "created_by": created_event["created_by"]
+    }
+
 @api_router.post("/debug/create-test-user")
 async def create_test_user():
     """Create a test user for debugging purposes"""

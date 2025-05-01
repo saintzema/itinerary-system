@@ -673,8 +673,17 @@ function CreateEvent() {
       });
       navigate("/dashboard");
     } catch (error) {
+      console.error("Event creation error:", error);
+      
       if (error.response && error.response.data) {
-        setError(error.response.data.detail || "Failed to create event");
+        // Handle error detail which might be an object or string
+        const detail = error.response.data.detail;
+        if (typeof detail === 'object') {
+          // If detail is an object, convert it to a string
+          setError(JSON.stringify(detail));
+        } else {
+          setError(detail || "Failed to create event");
+        }
       } else {
         setError("Failed to create event. Please try again.");
       }

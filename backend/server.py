@@ -124,12 +124,18 @@ class EventCreate(BaseModel):
     participants: List[str] = []
     
     # Add validator for recurrence_end_date
+    @model_validator(mode='before')
     @classmethod
-    def model_pre_root(cls, values):
-        # Convert empty string to None for recurrence_end_date
-        if 'recurrence_end_date' in values and values['recurrence_end_date'] == "":
-            values['recurrence_end_date'] = None
-        return values
+    def validate_empty_string_dates(cls, data):
+        if isinstance(data, dict):
+            # Handle empty string for recurrence_end_date
+            if 'recurrence_end_date' in data and data['recurrence_end_date'] == "":
+                data['recurrence_end_date'] = None
+                
+            # If recurrence is 'none', ensure recurrence_end_date is None
+            if 'recurrence' in data and data['recurrence'] == 'none':
+                data['recurrence_end_date'] = None
+        return data
 
 class EventUpdate(BaseModel):
     title: Optional[str] = None

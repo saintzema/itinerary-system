@@ -699,6 +699,8 @@ function Dashboard() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  console.log("Dashboard component mounted, user:", user?.username);
 
   useEffect(() => {
     const fetchEvents = async () => {

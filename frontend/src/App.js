@@ -119,6 +119,155 @@ function ProtectedRoute({ children }) {
 }
 
 // Components
+// Notifications component
+function Notifications() {
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      setNotifications(response.data);
+      
+      // Count unread notifications
+      const unread = response.data.filter(n => n.status !== "read").length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchNotifications();
+    
+    // Poll for new notifications every minute
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  const markAsRead = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`${API}/notifications/${id}/read`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Update local state
+      setNotifications(prevNotifications => 
+        prevNotifications.map(notification => 
+          notification.id === id 
+            ? { ...notification, status: "read", read_at: new Date().toISOString() }
+            : notification
+        )
+      );
+      
+      // Update unread count
+      setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+  
+  const handleNotificationClick = (notification) => {
+    // Mark as read if not already
+    if (notification.status !== "read") {
+      markAsRead(notification.id);
+    }
+    
+    // If it's related to an event, navigate to that event
+    if (notification.reference_id && notification.type.includes("event")) {
+      // Close dropdown
+      setShowDropdown(false);
+      // Navigate to event (implement in a future update)
+      // navigate(`/events/${notification.reference_id}`);
+    }
+  };
+  
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) {
+      return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    } else if (diffHrs < 24) {
+      return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+  
+  return (
+    <div className="relative">
+      <button 
+        className="relative p-1 rounded-full text-gray-300 hover:text-white focus:outline-none"
+        onClick={() => setShowDropdown(!showDropdown)}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
+        )}
+      </button>
+      
+      {showDropdown && (
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+          <div className="px-4 py-2 text-sm font-medium text-gray-700 border-b">
+            Notifications
+          </div>
+          <div className="max-h-96 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                No notifications yet
+              </div>
+            ) : (
+              notifications.map(notification => (
+                <div 
+                  key={notification.id}
+                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                    notification.status !== "read" ? "bg-blue-50" : ""
+                  }`}
+                  onClick={() => handleNotificationClick(notification)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="text-sm font-medium text-gray-900">
+                      {notification.title}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatTime(notification.created_at)}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {notification.message}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="px-4 py-2 text-xs text-gray-500 border-t text-center">
+            Click a notification to mark it as read
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -133,7 +282,7 @@ function Header() {
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-xl font-bold">Itinerary Management System</Link>
         <nav>
-          <ul className="flex space-x-4">
+          <ul className="flex space-x-4 items-center">
             {user ? (
               <>
                 <li>
@@ -147,6 +296,9 @@ function Header() {
                     <Link to="/manage-users" className="hover:text-gray-300">Manage Users</Link>
                   </li>
                 )}
+                <li>
+                  <Notifications />
+                </li>
                 <li>
                   <button 
                     onClick={handleLogout}

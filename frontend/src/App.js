@@ -38,25 +38,37 @@ function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password);
+      console.log("Login attempt:", { username, password });
+      
+      // Using URLSearchParams instead of FormData for better compatibility
+      const params = new URLSearchParams();
+      params.append("username", username);
+      params.append("password", password);
 
-      const response = await axios.post(`${API}/token`, formData, {
+      console.log("Login params:", params.toString());
+
+      const response = await axios.post(`${API}/token`, params.toString(), {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
 
+      console.log("Login response:", response.data);
+      
       const { access_token } = response.data;
       localStorage.setItem("token", access_token);
 
       // Fetch user profile with the token
       const userData = await getUserProfile(access_token);
+      console.log("User profile:", userData);
       setUser(userData);
       return userData;
     } catch (error) {
       console.error("Login error:", error);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        console.error("Status:", error.response.status);
+      }
       throw error;
     }
   };

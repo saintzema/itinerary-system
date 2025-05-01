@@ -850,14 +850,386 @@ function CreateEvent() {
   );
 }
 
-// Placeholder for Calendar component
+// Calendar component
 function Calendar() {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [mode, setMode] = useState("month"); // "day", "week", "month"
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+
+  // Format date for display
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  // Format time for display
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+  };
+
+  // Get days in month
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Get day of week for first day of month
+  const getFirstDayOfMonth = (year, month) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  // Function to navigate to previous month
+  const prevMonth = () => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
+  };
+
+  // Function to navigate to next month
+  const nextMonth = () => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  };
+
+  // Function to navigate to today
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Load events for the current month view
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+
+        // Calculate start and end dates for the month view
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0);
+
+        const response = await axios.get(`${API}/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+          },
+        });
+
+        setEvents(response.data);
+        setError("");
+      } catch (err) {
+        console.error("Error fetching events for calendar:", err);
+        setError("Failed to load events. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [currentDate]);
+
+  // Get calendar data for the current month
+  const getCalendarData = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDayOfMonth = getFirstDayOfMonth(year, month);
+    
+    const calendarDays = [];
+    
+    // Add empty cells for days before the first day of month
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      calendarDays.push({ day: null, date: null });
+    }
+    
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      calendarDays.push({ day, date });
+    }
+    
+    return calendarDays;
+  };
+
+  // Get events for a specific day
+  const getEventsForDay = (date) => {
+    if (!date) return [];
+    
+    return events.filter(event => {
+      const eventStart = new Date(event.start_time);
+      const eventDate = new Date(
+        eventStart.getFullYear(),
+        eventStart.getMonth(),
+        eventStart.getDate()
+      );
+      
+      const calendarDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+      
+      return eventDate.getTime() === calendarDate.getTime();
+    });
+  };
+
+  // Handle event click
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+
+  // Event Modal
+  const EventModal = ({ event, onClose }) => {
+    if (!event) return null;
+    
+    const startTime = new Date(event.start_time);
+    const endTime = new Date(event.end_time);
+    
+    const priorityColors = {
+      high: "bg-red-100 text-red-800 border-red-200",
+      medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      low: "bg-green-100 text-green-800 border-green-200",
+    };
+    
+    return (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div className="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+          <div className={`border-l-4 p-4 ${priorityColors[event.priority]}`}>
+            <div className="flex justify-between items-start">
+              <h3 className="text-xl font-bold">{event.title}</h3>
+              <button 
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="mt-4">
+              {event.description && (
+                <p className="text-gray-700 mb-3">{event.description}</p>
+              )}
+              
+              <div className="text-sm">
+                <p className="mb-1">
+                  <span className="font-medium">Start:</span> {formatDate(startTime)} at {formatTime(startTime)}
+                </p>
+                <p className="mb-1">
+                  <span className="font-medium">End:</span> {formatDate(endTime)} at {formatTime(endTime)}
+                </p>
+                {event.venue && (
+                  <p className="mb-1">
+                    <span className="font-medium">Venue:</span> {event.venue}
+                  </p>
+                )}
+                <p className="mb-1">
+                  <span className="font-medium">Priority:</span> {event.priority.charAt(0).toUpperCase() + event.priority.slice(1)}
+                </p>
+                {event.recurrence !== "none" && (
+                  <p className="mb-1">
+                    <span className="font-medium">Recurrence:</span> {event.recurrence.charAt(0).toUpperCase() + event.recurrence.slice(1)}
+                  </p>
+                )}
+              </div>
+              
+              <div className="mt-4 flex justify-end">
+                <Link 
+                  to={`/events/${event.id}`}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  View Details
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render calendar view
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Calendar View</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-center text-gray-500">Calendar view coming soon</p>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <div className="flex space-x-2">
+          <Link
+            to="/create-event"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Create Event
+          </Link>
+        </div>
       </div>
+
+      {/* Calendar Navigation */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="flex justify-between items-center p-4 border-b">
+          <div className="flex space-x-2">
+            <button 
+              onClick={prevMonth}
+              className="px-3 py-1 border rounded hover:bg-gray-100"
+            >
+              &#8592; Prev
+            </button>
+            <button 
+              onClick={goToToday}
+              className="px-3 py-1 border rounded hover:bg-gray-100"
+            >
+              Today
+            </button>
+            <button 
+              onClick={nextMonth}
+              className="px-3 py-1 border rounded hover:bg-gray-100"
+            >
+              Next &#8594;
+            </button>
+          </div>
+          <h2 className="text-xl font-semibold">
+            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </h2>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setMode("day")}
+              className={`px-3 py-1 border rounded ${mode === "day" ? "bg-blue-100 border-blue-300" : "hover:bg-gray-100"}`}
+            >
+              Day
+            </button>
+            <button 
+              onClick={() => setMode("week")}
+              className={`px-3 py-1 border rounded ${mode === "week" ? "bg-blue-100 border-blue-300" : "hover:bg-gray-100"}`}
+            >
+              Week
+            </button>
+            <button 
+              onClick={() => setMode("month")}
+              className={`px-3 py-1 border rounded ${mode === "month" ? "bg-blue-100 border-blue-300" : "hover:bg-gray-100"}`}
+            >
+              Month
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center">
+            <p>Loading calendar...</p>
+          </div>
+        ) : error ? (
+          <div className="p-4 bg-red-100 text-red-800 text-center">
+            {error}
+          </div>
+        ) : (
+          <div className="p-4">
+            {/* Month View */}
+            {mode === "month" && (
+              <>
+                {/* Day headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                    <div key={i} className="text-center font-semibold py-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {getCalendarData().map((day, index) => {
+                    const dayEvents = getEventsForDay(day.date);
+                    const isToday = day.date && 
+                      day.date.getDate() === new Date().getDate() && 
+                      day.date.getMonth() === new Date().getMonth() &&
+                      day.date.getFullYear() === new Date().getFullYear();
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`border rounded min-h-32 ${
+                          !day.day ? 'bg-gray-100' : 
+                          isToday ? 'bg-blue-50 border-blue-200' : ''
+                        }`}
+                      >
+                        {day.day && (
+                          <>
+                            <div className="p-1 text-right">
+                              <span className={`inline-block rounded-full w-6 h-6 text-center ${
+                                isToday ? 'bg-blue-500 text-white' : ''
+                              }`}>
+                                {day.day}
+                              </span>
+                            </div>
+                            <div className="px-1 pb-1 overflow-y-auto max-h-24">
+                              {dayEvents.map(event => (
+                                <div 
+                                  key={event.id}
+                                  onClick={() => handleEventClick(event)}
+                                  className={`text-xs p-1 mb-1 rounded cursor-pointer truncate ${
+                                    event.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                  }`}
+                                >
+                                  {formatTime(event.start_time)} {event.title}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Week and Day view placeholders */}
+            {mode === "week" && (
+              <div className="text-center py-12 text-gray-500">
+                Week view is coming soon
+              </div>
+            )}
+            
+            {mode === "day" && (
+              <div className="text-center py-12 text-gray-500">
+                Day view is coming soon
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Event Details Modal */}
+      {showEventModal && (
+        <EventModal 
+          event={selectedEvent} 
+          onClose={() => {
+            setShowEventModal(false);
+            setSelectedEvent(null);
+          }}
+        />
+      )}
     </div>
   );
 }

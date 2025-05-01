@@ -703,11 +703,17 @@ function Dashboard() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
         // Get today's date and 30 days from now for initial load
         const today = new Date();
         const endDate = new Date(today);
         endDate.setDate(today.getDate() + 30);
+
+        console.log("Dashboard - Fetching events with date range:", {
+          start_date: today.toISOString(),
+          end_date: endDate.toISOString()
+        });
 
         const response = await axios.get(`${API}/events`, {
           headers: {
@@ -719,9 +725,14 @@ function Dashboard() {
           },
         });
 
+        console.log("Dashboard - Events fetched:", response.data);
         setEvents(response.data);
       } catch (error) {
         console.error("Error fetching events:", error);
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+          console.error("Status:", error.response.status);
+        }
         setError("Failed to load events");
       } finally {
         setLoading(false);

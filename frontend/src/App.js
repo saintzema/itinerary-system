@@ -822,7 +822,23 @@ function CreateEvent() {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API}/events`, formData, {
+      
+      // Create a copy of the form data to prevent modifying state directly
+      const eventData = { ...formData };
+      
+      // If recurrence is 'none', set recurrence_end_date to null explicitly
+      if (eventData.recurrence === "none") {
+        eventData.recurrence_end_date = null;
+      }
+      
+      // If recurrence_end_date is empty string, set it to null
+      if (eventData.recurrence_end_date === "") {
+        eventData.recurrence_end_date = null;
+      }
+      
+      console.log("Submitting event data:", eventData);
+      
+      await axios.post(`${API}/events`, eventData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

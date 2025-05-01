@@ -306,6 +306,69 @@ async def read_users_me(current_user: dict = Depends(get_current_active_user)):
         created_at=current_user["created_at"]
     )
 
+@api_router.get("/users", response_model=List[UserResponse])
+async def get_all_users(current_user: dict = Depends(get_current_active_user)):
+    # Only admin and staff can view all users
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.STAFF]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view all users"
+        )
+    
+    users = await db.users.find().to_list(1000)
+    return [
+        UserResponse(
+            id=user["id"],
+            email=user["email"],
+            username=user["username"],
+            full_name=user["full_name"],
+            role=user["role"],
+            created_at=user["created_at"]
+        ) for user in users
+    ]
+
+@api_router.put("/users/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: str,
+    user_update: UserUpdate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    # Only admin can update users
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update users"
+        )
+    
+    # Get existing user
+    existing_user = await db.users.find_one({"id": user_id})
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Create update dictionary with non-None fields
+    update_data = {k: v for k, v in user_update.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Update the user
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": jsonable_encoder(update_data)}
+    )
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": user_id})
+    return UserResponse(
+        id=updated_user["id"],
+        email=updated_user["email"],
+        username=updated_user["username"],
+        full_name=updated_user["full_name"],
+        role=updated_user["role"],
+        created_at=updated_user["created_at"]
+    )
+
 # Event Routes
 @api_router.post("/events", response_model=EventResponse)
 async def create_event(event: EventCreate, current_user: dict = Depends(get_current_active_user)):

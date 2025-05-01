@@ -232,9 +232,15 @@ async def get_user_by_username(username: str):
 async def authenticate_user(username: str, password: str):
     user = await get_user_by_username(username)
     if not user:
+        logger.warning(f"User not found: {username}")
         return False
-    if not verify_password(password, user["hashed_password"]):
+    
+    password_check = verify_password(password, user["hashed_password"])
+    if not password_check:
+        logger.warning(f"Invalid password for user: {username}")
         return False
+    
+    logger.info(f"Authentication successful for user: {username}")
     return user
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):

@@ -839,6 +839,38 @@ async def debug_notifications(current_user: dict = Depends(get_current_active_us
         ] if all_notifications else []
     }
 
+@api_router.post("/debug/create-test-user")
+async def create_test_user():
+    """Create a test user for debugging purposes"""
+    # Check if the test user already exists
+    test_username = "testuser"
+    existing_user = await get_user_by_username(test_username)
+    
+    if existing_user:
+        return {
+            "message": "Test user already exists",
+            "username": test_username,
+            "password": "password123"
+        }
+    
+    # Create a new test user
+    hashed_password = get_password_hash("password123")
+    new_user = User(
+        username=test_username,
+        email="testuser@example.com",
+        hashed_password=hashed_password,
+        full_name="Test User",
+        role=UserRole.ADMIN
+    )
+    
+    result = await db.users.insert_one(jsonable_encoder(new_user))
+    
+    return {
+        "message": "Test user created successfully",
+        "username": test_username,
+        "password": "password123"
+    }
+
 @api_router.get("/")
 async def root():
     return {"message": "Hello from the Itinerary Management System API"}

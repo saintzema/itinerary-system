@@ -424,7 +424,17 @@ function Login() {
       await login(username, password);
       navigate("/dashboard");
     } catch (error) {
-      setError("Invalid username or password");
+      console.error("Login error in component:", error);
+      
+      if (error.response && error.response.data) {
+        if (error.response.data.detail) {
+          setError(error.response.data.detail);
+        } else {
+          setError(JSON.stringify(error.response.data));
+        }
+      } else {
+        setError("Login failed. Please check your credentials and try again.");
+      }
     } finally {
       setLoading(false);
     }

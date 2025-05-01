@@ -1148,6 +1148,11 @@ function Calendar() {
         const startDate = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
 
+        console.log("Calendar - Fetching events for date range:", {
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString()
+        });
+
         const response = await axios.get(`${API}/events`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1158,10 +1163,15 @@ function Calendar() {
           },
         });
 
+        console.log("Calendar - Events fetched:", response.data);
         setEvents(response.data);
         setError("");
       } catch (err) {
         console.error("Error fetching events for calendar:", err);
+        if (err.response) {
+          console.error("Error response:", err.response.data);
+          console.error("Status:", err.response.status);
+        }
         setError("Failed to load events. Please try again.");
       } finally {
         setLoading(false);

@@ -768,6 +768,49 @@ async def delete_event(
     
     return {"message": "Event deleted successfully"}
 
+@api_router.get("/debug/notifications")
+async def debug_notifications(current_user: dict = Depends(get_current_active_user)):
+    """Debug endpoint to check notification status"""
+    # Count notifications by type
+    notification_stats = {}
+    
+    # Get all notifications
+    all_notifications = await db.notifications.find().to_list(1000)
+    
+    # Count by type
+    for notification in all_notifications:
+        notification_type = notification.get("type", "unknown")
+        notification_stats[notification_type] = notification_stats.get(notification_type, 0) + 1
+    
+    # Count by status
+    status_stats = {}
+    for notification in all_notifications:
+        status = notification.get("status", "unknown")
+        status_stats[status] = status_stats.get(status, 0) + 1
+    
+    # Count by user
+    user_stats = {}
+    for notification in all_notifications:
+        user_id = notification.get("user_id", "unknown")
+        user_stats[user_id] = user_stats.get(user_id, 0) + 1
+    
+    return {
+        "total_notifications": len(all_notifications),
+        "by_type": notification_stats,
+        "by_status": status_stats,
+        "by_user": user_stats,
+        "notifications_for_current_user": sum(1 for n in all_notifications if n.get("user_id") == current_user["id"]),
+        "last_5_notifications": [
+            {
+                "id": n["id"],
+                "title": n["title"],
+                "user_id": n["user_id"],
+                "status": n["status"],
+                "created_at": n["created_at"],
+            } for n in all_notifications[:5]
+        ] if all_notifications else []
+    }
+
 @api_router.get("/")
 async def root():
     return {"message": "Hello from the Itinerary Management System API"}

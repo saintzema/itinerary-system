@@ -547,10 +547,16 @@ function Register() {
       await register(formData);
       navigate("/login", { state: { message: "Registration successful. Please log in." } });
     } catch (error) {
+      console.error("Registration error in component:", error);
+      
       if (error.response && error.response.data) {
-        setError(error.response.data.detail || "Registration failed");
+        if (error.response.data.detail) {
+          setError(error.response.data.detail);
+        } else {
+          setError(JSON.stringify(error.response.data));
+        }
       } else {
-        setError("Registration failed. Please try again.");
+        setError("Registration failed. Please try again with a different username or email.");
       }
     } finally {
       setLoading(false);

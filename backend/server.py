@@ -122,6 +122,13 @@ class EventCreate(BaseModel):
     recurrence: RecurrenceType = RecurrenceType.NONE
     recurrence_end_date: Optional[datetime] = None
     participants: List[str] = []
+    
+    # Add validator to handle the empty string for recurrence_end_date
+    @classmethod
+    def validate_recurrence_end_date(cls, v):
+        if v == "":
+            return None
+        return v
 
 class EventUpdate(BaseModel):
     title: Optional[str] = None

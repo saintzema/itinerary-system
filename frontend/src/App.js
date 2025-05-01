@@ -305,23 +305,26 @@ function Header() {
   return (
     <header className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">Itinerary Management System</Link>
+        <Link to="/" className="text-xl font-bold" data-testid="home-link">Itinerary Management System</Link>
         <nav>
           <ul className="flex space-x-4 items-center">
             {user ? (
               <>
                 <li>
-                  <Link to="/dashboard" className="hover:text-gray-300">Dashboard</Link>
+                  <Link to="/dashboard" className="hover:text-gray-300" data-testid="dashboard-link">Dashboard</Link>
                 </li>
                 <li>
-                  <Link to="/calendar" className="hover:text-gray-300">Calendar</Link>
+                  <Link to="/calendar" className="hover:text-gray-300" data-testid="calendar-link">Calendar</Link>
                 </li>
                 <li>
-                  <Link to="/reports" className="hover:text-gray-300">Reports</Link>
+                  <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">Create Event</Link>
+                </li>
+                <li>
+                  <Link to="/reports" className="hover:text-gray-300" data-testid="reports-link">Reports</Link>
                 </li>
                 {(user.role === "admin" || user.role === "staff") && (
                   <li>
-                    <Link to="/manage-users" className="hover:text-gray-300">Manage Users</Link>
+                    <Link to="/manage-users" className="hover:text-gray-300" data-testid="manage-users-link">Manage Users</Link>
                   </li>
                 )}
                 <li>
@@ -331,6 +334,7 @@ function Header() {
                   <button 
                     onClick={handleLogout}
                     className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+                    data-testid="logout-button"
                   >
                     Logout
                   </button>
@@ -339,10 +343,10 @@ function Header() {
             ) : (
               <>
                 <li>
-                  <Link to="/login" className="hover:text-gray-300">Login</Link>
+                  <Link to="/login" className="hover:text-gray-300" data-testid="login-link">Login</Link>
                 </li>
                 <li>
-                  <Link to="/register" className="hover:text-gray-300">Register</Link>
+                  <Link to="/register" className="hover:text-gray-300" data-testid="register-link">Register</Link>
                 </li>
               </>
             )}

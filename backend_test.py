@@ -300,6 +300,17 @@ class ItineraryAPITester:
         else:
             self.test_get_events()
             self.test_get_event_by_id()
+            
+            # Test notifications after creating an event
+            print("\n📬 Testing Notifications...")
+            if not self.test_get_notifications():
+                print("❌ No notifications found after event creation")
+            else:
+                # Test marking notification as read
+                if not self.test_mark_notification_as_read():
+                    print("❌ Failed to mark notification as read")
+            
+            # Continue with event tests
             self.test_update_event()
             self.test_delete_event()
         

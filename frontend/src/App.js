@@ -1386,14 +1386,364 @@ function Calendar() {
   );
 }
 
-// Placeholder for ManageUsers component
+// ManageUsers component
 function ManageUsers() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const { user: currentUser } = useAuth();
+
+  // New user state
+  const [newUser, setNewUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+    full_name: "",
+    role: "user"
+  });
+
+  // Get all users
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+
+      // This endpoint will need to be added to the backend
+      const response = await axios.get(`${API}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUsers(response.data);
+      setError("");
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      if (err.response && err.response.status === 403) {
+        setError("You don't have permission to view users");
+      } else {
+        setError("Failed to load users. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Handle form input change for new user
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser({
+      ...newUser,
+      [name]: value
+    });
+  };
+
+  // Handle form submission for new user
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${API}/users`, newUser, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      // Add the new user to the list
+      setUsers([...users, response.data]);
+      
+      // Reset form and close modal
+      setNewUser({
+        username: "",
+        email: "",
+        password: "",
+        full_name: "",
+        role: "user"
+      });
+      setShowAddUserModal(false);
+      
+    } catch (err) {
+      console.error("Error creating user:", err);
+      if (err.response && err.response.data) {
+        alert(err.response.data.detail || "Failed to create user");
+      } else {
+        alert("Failed to create user. Please try again.");
+      }
+    }
+  };
+
+  // Handle user edit (placeholder)
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setShowEditUserModal(true);
+  };
+
+  // Handle role change
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // This endpoint will need to be implemented in the backend
+      await axios.put(`${API}/users/${userId}`, 
+        { role: newRole },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Update the user in the list
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+      
+    } catch (err) {
+      console.error("Error updating user role:", err);
+      alert("Failed to update user role. Please try again.");
+    }
+  };
+
+  // The actual component render
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Manage Users</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-center text-gray-500">User management coming soon</p>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Manage Users</h1>
+        {currentUser && currentUser.role === "admin" && (
+          <button
+            onClick={() => setShowAddUserModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Add User
+          </button>
+        )}
       </div>
+
+      {loading ? (
+        <div className="text-center py-4">Loading users...</div>
+      ) : error ? (
+        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>
+      ) : (
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Username
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {user.full_name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{user.username}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {currentUser && currentUser.role === "admin" ? (
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        className="text-sm text-gray-500 border rounded p-1"
+                        disabled={user.id === currentUser.id} // Don't allow changing own role
+                      >
+                        <option value="user">User</option>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    ) : (
+                      <div className="text-sm text-gray-500 capitalize">{user.role}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    {currentUser && currentUser.role === "admin" && (
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Add New User</h3>
+              <button 
+                onClick={() => setShowAddUserModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateUser}>
+              <div className="mb-4">
+                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="full_name"
+                  name="full_name"
+                  value={newUser.full_name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={newUser.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={newUser.username}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={newUser.password}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={newUser.role}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="user">User</option>
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal - Placeholder */}
+      {showEditUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Edit User: {selectedUser.username}</h3>
+              <button 
+                onClick={() => {
+                  setShowEditUserModal(false);
+                  setSelectedUser(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="text-center py-4">
+              <p>User editing functionality coming soon.</p>
+              <button
+                onClick={() => {
+                  setShowEditUserModal(false);
+                  setSelectedUser(null);
+                }}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1131,8 +1131,17 @@ function Calendar() {
   const getEventsForDay = (date) => {
     if (!date) return [];
     
-    return events.filter(event => {
+    // For debugging
+    console.log("Events:", events);
+    console.log("Checking date:", date);
+    
+    const filteredEvents = events.filter(event => {
       const eventStart = new Date(event.start_time);
+      
+      // Log event dates for debugging
+      console.log(`Event: ${event.title}, Start: ${eventStart}`);
+      
+      // Create date objects with just the date portion (no time)
       const eventDate = new Date(
         eventStart.getFullYear(),
         eventStart.getMonth(),
@@ -1145,8 +1154,15 @@ function Calendar() {
         date.getDate()
       );
       
-      return eventDate.getTime() === calendarDate.getTime();
+      // Check if dates match
+      const match = eventDate.getTime() === calendarDate.getTime();
+      console.log(`Matching ${eventDate.toDateString()} with ${calendarDate.toDateString()}: ${match}`);
+      
+      return match;
     });
+    
+    console.log(`Found ${filteredEvents.length} events for ${date.toDateString()}`);
+    return filteredEvents;
   };
 
   // Handle event click

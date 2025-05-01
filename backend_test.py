@@ -10,9 +10,9 @@ class ItineraryAPITester:
         self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.test_user = f"test_user_{uuid.uuid4().hex[:8]}"
-        self.test_password = "TestPass123!"
-        self.test_email = f"{self.test_user}@example.com"
+        self.test_user = "testuser"
+        self.test_password = "password123"
+        self.test_email = "testuser@example.com"
         self.test_full_name = "Test User"
         self.event_id = None
         self.notification_id = None

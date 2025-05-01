@@ -839,6 +839,25 @@ async def debug_notifications(current_user: dict = Depends(get_current_active_us
         ] if all_notifications else []
     }
 
+@api_router.get("/debug/events")
+async def debug_events():
+    """Debug endpoint to check events in the database"""
+    # Get all events
+    all_events = await db.events.find().to_list(1000)
+    
+    return {
+        "total_events": len(all_events),
+        "event_sample": [
+            {
+                "id": event["id"],
+                "title": event["title"],
+                "created_by": event["created_by"],
+                "start_time": event["start_time"],
+                "end_time": event["end_time"]
+            } for event in all_events[:5]
+        ] if all_events else []
+    }
+
 @api_router.post("/debug/create-test-user")
 async def create_test_user():
     """Create a test user for debugging purposes"""

@@ -262,13 +262,18 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
 # Routes for authentication
 @api_router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    logger.info(f"Login attempt for user: {form_data.username}")
+    
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
+        logger.warning(f"Failed login attempt for user: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    logger.info(f"Successful login for user: {form_data.username}")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["username"]}, expires_delta=access_token_expires

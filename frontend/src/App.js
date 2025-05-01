@@ -897,13 +897,23 @@ function CreateEvent() {
       
       console.log("Submitting event data:", eventData);
       
-      await axios.post(`${API}/events`, eventData, {
+      const response = await axios.post(`${API}/events`, eventData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      navigate("/dashboard");
+      
+      console.log("Event created successfully:", response.data);
+      
+      // Add a success message to navigate with state
+      navigate("/dashboard", { 
+        state: { 
+          message: "Event created successfully!", 
+          messageType: "success",
+          eventId: response.data.id
+        } 
+      });
     } catch (error) {
       console.error("Event creation error:", error);
       

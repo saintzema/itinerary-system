@@ -149,6 +149,49 @@ class EventResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+class NotificationStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    READ = "read"
+
+class NotificationType(str, Enum):
+    EVENT_REMINDER = "event_reminder"
+    EVENT_UPDATE = "event_update"
+    EVENT_CANCELLATION = "event_cancellation"
+    SYSTEM = "system"
+
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    title: str
+    message: str
+    type: NotificationType
+    status: NotificationStatus = NotificationStatus.PENDING
+    reference_id: Optional[str] = None  # Reference to an event
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    scheduled_for: Optional[datetime] = None  # When the notification should be sent
+    read_at: Optional[datetime] = None
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    title: str
+    message: str
+    type: NotificationType
+    reference_id: Optional[str] = None
+    scheduled_for: Optional[datetime] = None
+
+class NotificationResponse(BaseModel):
+    id: str
+    user_id: str
+    title: str
+    message: str
+    type: NotificationType
+    status: NotificationStatus
+    reference_id: Optional[str]
+    created_at: datetime
+    scheduled_for: Optional[datetime]
+    read_at: Optional[datetime]
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

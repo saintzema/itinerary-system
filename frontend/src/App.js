@@ -1832,8 +1832,7 @@ function Reports() {
 
   useEffect(() => {
     fetchEventData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportType]);
+  }, [reportType, fetchEventData]);
 
   const handleDateRangeChange = (e) => {
     const { name, value } = e.target;

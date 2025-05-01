@@ -75,10 +75,21 @@ function AuthProvider({ children }) {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post(`${API}/users`, userData);
+      console.log("Registration attempt:", userData);
+      
+      // Make a copy to avoid modifying the original
+      const userDataToSend = { ...userData };
+      
+      const response = await axios.post(`${API}/users`, userDataToSend);
+      console.log("Registration response:", response.data);
+      
       return response.data;
     } catch (error) {
       console.error("Registration error:", error);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        console.error("Status:", error.response.status);
+      }
       throw error;
     }
   };

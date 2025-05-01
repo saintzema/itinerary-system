@@ -1749,6 +1749,326 @@ function ManageUsers() {
 }
 
 // Main App component
+// Reports component
+function Reports() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [events, setEvents] = useState([]);
+  const [reportType, setReportType] = useState("upcoming");
+  const [dateRange, setDateRange] = useState({
+    start: new Date().toISOString().split("T")[0],
+    end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+  });
+
+  const fetchEventData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      
+      let queryParams = {};
+      if (reportType === "custom") {
+        // Format dates for API
+        queryParams = {
+          start_date: new Date(dateRange.start + "T00:00:00").toISOString(),
+          end_date: new Date(dateRange.end + "T23:59:59").toISOString()
+        };
+      } else if (reportType === "upcoming") {
+        // Get upcoming events for next 30 days
+        const today = new Date();
+        const endDate = new Date();
+        endDate.setDate(today.getDate() + 30);
+        queryParams = {
+          start_date: today.toISOString(),
+          end_date: endDate.toISOString()
+        };
+      } else if (reportType === "past") {
+        // Get past events from last 30 days
+        const today = new Date();
+        const startDate = new Date();
+        startDate.setDate(today.getDate() - 30);
+        queryParams = {
+          start_date: startDate.toISOString(),
+          end_date: today.toISOString()
+        };
+      }
+
+      const response = await axios.get(`${API}/events`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: queryParams
+      });
+
+      setEvents(response.data);
+      setError("");
+    } catch (err) {
+      console.error("Error fetching report data:", err);
+      setError("Failed to load report data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEventData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportType]);
+
+  const handleDateRangeChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange({
+      ...dateRange,
+      [name]: value
+    });
+  };
+
+  const handleCustomDateSubmit = (e) => {
+    e.preventDefault();
+    fetchEventData();
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  // Group events by priority
+  const eventsByPriority = {
+    high: events.filter(event => event.priority === "high"),
+    medium: events.filter(event => event.priority === "medium"),
+    low: events.filter(event => event.priority === "low")
+  };
+
+  // Count events by recurrence type
+  const recurrenceStats = events.reduce((stats, event) => {
+    stats[event.recurrence] = (stats[event.recurrence] || 0) + 1;
+    return stats;
+  }, {});
+
+  // Prepare data for export
+  const prepareExportData = () => {
+    return events.map(event => ({
+      title: event.title,
+      description: event.description || "",
+      start_time: formatDate(event.start_time),
+      end_time: formatDate(event.end_time),
+      venue: event.venue || "",
+      priority: event.priority,
+      recurrence: event.recurrence
+    }));
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const data = prepareExportData();
+    if (data.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const csvRows = [
+      headers.join(","),
+      ...data.map(row => 
+        headers.map(header => 
+          JSON.stringify(row[header] || "")
+        ).join(",")
+      )
+    ];
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `event_report_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Reports</h1>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+          <div className="flex space-x-4 mb-4 md:mb-0">
+            <button
+              onClick={() => setReportType("upcoming")}
+              className={`px-4 py-2 rounded ${
+                reportType === "upcoming" ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              Upcoming Events
+            </button>
+            <button
+              onClick={() => setReportType("past")}
+              className={`px-4 py-2 rounded ${
+                reportType === "past" ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              Past Events
+            </button>
+            <button
+              onClick={() => setReportType("custom")}
+              className={`px-4 py-2 rounded ${
+                reportType === "custom" ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
+            >
+              Custom Date Range
+            </button>
+          </div>
+          <button
+            onClick={exportToCSV}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+          >
+            Export to CSV
+          </button>
+        </div>
+
+        {reportType === "custom" && (
+          <form onSubmit={handleCustomDateSubmit} className="mb-6 flex flex-wrap gap-4 items-end">
+            <div>
+              <label htmlFor="start" className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                id="start"
+                name="start"
+                value={dateRange.start}
+                onChange={handleDateRangeChange}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="end" className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                id="end"
+                name="end"
+                value={dateRange.end}
+                onChange={handleDateRangeChange}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            >
+              Apply
+            </button>
+          </form>
+        )}
+
+        {loading ? (
+          <div className="text-center py-8">Loading report data...</div>
+        ) : error ? (
+          <div className="bg-red-100 text-red-700 p-4 rounded mb-4">{error}</div>
+        ) : (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">
+              {reportType === "upcoming" ? "Upcoming Events" : 
+               reportType === "past" ? "Past Events" : "Custom Date Range Events"}
+            </h2>
+
+            {events.length === 0 ? (
+              <p className="text-center py-4 bg-gray-50 rounded">No events found for this period</p>
+            ) : (
+              <div className="mb-8">
+                <h3 className="text-lg font-medium mb-3">Events by Priority</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h4 className="font-semibold text-red-800 mb-2">High Priority</h4>
+                    <p className="text-2xl font-bold">{eventsByPriority.high.length}</p>
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h4 className="font-semibold text-yellow-800 mb-2">Medium Priority</h4>
+                    <p className="text-2xl font-bold">{eventsByPriority.medium.length}</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">Low Priority</h4>
+                    <p className="text-2xl font-bold">{eventsByPriority.low.length}</p>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-medium mb-3">Event List</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Start Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          End Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Venue
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Priority
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Recurrence
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {events.map((event) => (
+                        <tr key={event.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{event.title}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{formatDate(event.start_time)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{formatDate(event.end_time)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">{event.venue || "-"}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${event.priority === "high" ? "bg-red-100 text-red-800" : 
+                                event.priority === "medium" ? "bg-yellow-100 text-yellow-800" : 
+                                "bg-green-100 text-green-800"}`}>
+                              {event.priority.charAt(0).toUpperCase() + event.priority.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500 capitalize">{event.recurrence}</div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <div className="min-h-screen bg-gray-100">
@@ -1789,6 +2109,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ManageUsers />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute>
+                    <Reports />
                   </ProtectedRoute>
                 } 
               />

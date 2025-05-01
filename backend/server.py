@@ -779,6 +779,23 @@ async def delete_event(
     
     return {"message": "Event deleted successfully"}
 
+@api_router.get("/debug/user/{username}")
+async def debug_user(username: str):
+    """Debug endpoint to check user information"""
+    user = await get_user_by_username(username)
+    if not user:
+        return {"message": f"User {username} not found"}
+    
+    # Don't return the hashed password for security
+    return {
+        "username": user["username"],
+        "email": user["email"],
+        "role": user["role"],
+        "id": user["id"],
+        "password_hash_length": len(user["hashed_password"]) if "hashed_password" in user else 0,
+        "created_at": user["created_at"]
+    }
+
 @api_router.get("/debug/notifications")
 async def debug_notifications(current_user: dict = Depends(get_current_active_user)):
     """Debug endpoint to check notification status"""

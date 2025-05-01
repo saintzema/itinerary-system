@@ -820,11 +820,25 @@ function Dashboard() {
 
 // Create Event Component
 function CreateEvent() {
+  // Initialize with default values including current date and time
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+  
+  // Format dates for input
+  const formatDateTimeForInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    start_time: "",
-    end_time: "",
+    start_time: formatDateTimeForInput(now),
+    end_time: formatDateTimeForInput(oneHourLater),
     venue: "",
     priority: "medium",
     recurrence: "none",

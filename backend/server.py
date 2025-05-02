@@ -17,6 +17,7 @@ from fastapi.encoders import jsonable_encoder
 import asyncio
 from threading import Thread
 import time
+import traceback
 
 # Constants
 ROOT_DIR = Path(__file__).parent

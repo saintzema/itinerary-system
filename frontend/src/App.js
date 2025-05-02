@@ -1125,16 +1125,16 @@ function Dashboard() {
                       }
                     }}
                     className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                    id="delete-event-button"
                     data-testid="delete-event-button"
                   >
-                    Delete
+                    Delete Event
                   </button>
                   
                   <button
                     onClick={() => {
-                      // Navigate to an edit form (would be implemented in a real application)
+                      // Navigate to edit form
                       setShowEventModal(false);
-                      // For now, just show a confirmation
                       navigate('/create-event', {
                         state: {
                           editMode: true,
@@ -1145,9 +1145,10 @@ function Dashboard() {
                       });
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                    id="edit-event-button"
                     data-testid="edit-event-button"
                   >
-                    Edit
+                    Edit Event
                   </button>
               </div>
             </div>

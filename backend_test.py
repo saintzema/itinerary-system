@@ -234,7 +234,7 @@ class ItineraryAPITester:
             if len(response) > 0:
                 self.notification_id = response[0]["id"]
                 print(f"First notification: {response[0]['title']} - {response[0]['message']}")
-                print(f"Read status: {response[0]['read']}")
+                print(f"Status: {response[0]['status']}")
                 return True
             else:
                 print("No notifications found")

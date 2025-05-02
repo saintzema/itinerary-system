@@ -164,11 +164,37 @@ function Notifications() {
         },
       });
       
-      setNotifications(response.data);
+      const newNotifications = response.data;
       
-      // Count unread notifications
-      const unread = response.data.filter(n => n.status !== "read").length;
-      setUnreadCount(unread);
+      // Check if we have new unread notifications compared to before
+      const oldUnreadCount = unreadCount;
+      const newUnreadCount = newNotifications.filter(n => n.status !== "read").length;
+      
+      // Play sound if there are new notifications and we haven't played the sound yet
+      if (newUnreadCount > oldUnreadCount && newUnreadCount > 0 && !hasPlayedSound) {
+        playNotificationSound();
+        setHasPlayedSound(true);
+        
+        // Reset sound flag after 10 seconds to allow for future sounds
+        setTimeout(() => {
+          setHasPlayedSound(false);
+        }, 10000);
+        
+        // Show browser notification if supported
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('New Notification', {
+              body: 'You have new notifications in your Itinerary Management System',
+              icon: '/favicon.ico'
+            });
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission();
+          }
+        }
+      }
+      
+      setNotifications(newNotifications);
+      setUnreadCount(newUnreadCount);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -177,10 +203,10 @@ function Notifications() {
   useEffect(() => {
     fetchNotifications();
     
-    // Poll for new notifications every minute
-    const interval = setInterval(fetchNotifications, 60000);
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [unreadCount, hasPlayedSound]); // Dependencies added
   
   const markAsRead = async (id) => {
     try {

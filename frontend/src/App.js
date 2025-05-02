@@ -1407,10 +1407,16 @@ function Calendar() {
       const month = currentDate.getMonth();
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0);
+      
+      // Set the time to the end of the day for endDate to include all events on the last day
+      endDate.setHours(23, 59, 59, 999);
 
+      // Debug logging with better formatting
       console.log("Calendar - Fetching events for date range:", {
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString()
+        start_date: startDate.toLocaleString(),
+        end_date: endDate.toLocaleString(),
+        start_date_iso: startDate.toISOString(),
+        end_date_iso: endDate.toISOString()
       });
 
       const response = await axios.get(`${API}/events`, {
@@ -1424,7 +1430,24 @@ function Calendar() {
       });
 
       console.log("Calendar - Events fetched:", response.data);
-      setEvents(response.data);
+      console.log("Calendar - Number of events:", response.data.length);
+      
+      if (response.data.length === 0) {
+        console.log("Calendar - No events found in date range, trying without date filtering");
+        
+        // If no events found with date filtering, try without filters
+        const allEventsResponse = await axios.get(`${API}/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        
+        console.log("Calendar - All events:", allEventsResponse.data);
+        setEvents(allEventsResponse.data);
+      } else {
+        setEvents(response.data);
+      }
+      
       setError("");
     } catch (err) {
       console.error("Error fetching events for calendar:", err);

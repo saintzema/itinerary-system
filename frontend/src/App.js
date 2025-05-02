@@ -746,19 +746,30 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
+  const [highlightedEventId, setHighlightedEventId] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const location = useLocation();
   
   console.log("Dashboard component mounted, user:", user?.username);
   
-  // Check for success message in navigation state
+  // Check for success message and highlighted event in navigation state
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
+      setMessageType(location.state.messageType || "success");
+      
       // Clear the message after 5 seconds
       const timer = setTimeout(() => {
         setSuccessMessage("");
       }, 5000);
       return () => clearTimeout(timer);
+    }
+    
+    // Check if we should highlight an event (from notification)
+    if (location.state?.highlightEventId) {
+      setHighlightedEventId(location.state.highlightEventId);
     }
   }, [location.state]);
 

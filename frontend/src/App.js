@@ -1181,51 +1181,52 @@ function Calendar() {
     setCurrentDate(new Date());
   };
 
-  // Load events for the current month view
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
+  // Function to fetch events for the current month
+  const fetchCalendarEvents = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
 
-        // Calculate start and end dates for the month view
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const startDate = new Date(year, month, 1);
-        const endDate = new Date(year, month + 1, 0);
+      // Calculate start and end dates for the month view
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0);
 
-        console.log("Calendar - Fetching events for date range:", {
+      console.log("Calendar - Fetching events for date range:", {
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString()
+      });
+
+      const response = await axios.get(`${API}/events`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
           start_date: startDate.toISOString(),
-          end_date: endDate.toISOString()
-        });
+          end_date: endDate.toISOString(),
+        },
+      });
 
-        const response = await axios.get(`${API}/events`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString(),
-          },
-        });
-
-        console.log("Calendar - Events fetched:", response.data);
-        setEvents(response.data);
-        setError("");
-      } catch (err) {
-        console.error("Error fetching events for calendar:", err);
-        if (err.response) {
-          console.error("Error response:", err.response.data);
-          console.error("Status:", err.response.status);
-        }
-        setError("Failed to load events. Please try again.");
-      } finally {
-        setLoading(false);
+      console.log("Calendar - Events fetched:", response.data);
+      setEvents(response.data);
+      setError("");
+    } catch (err) {
+      console.error("Error fetching events for calendar:", err);
+      if (err.response) {
+        console.error("Error response:", err.response.data);
+        console.error("Status:", err.response.status);
       }
-    };
+      setError("Failed to load events. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchEvents();
-  }, [currentDate]);
+  // Load events for the current month view and when location changes
+  useEffect(() => {
+    fetchCalendarEvents();
+  }, [currentDate, location.key]);
 
   // Get calendar data for the current month
   const getCalendarData = () => {

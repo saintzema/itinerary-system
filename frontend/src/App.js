@@ -1166,18 +1166,24 @@ function CreateEvent() {
   // Initialize with default values including current date and time
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+  const location = useLocation();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
   
   // Format dates for input
   const formatDateTimeForInput = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
+    if (!date) return "";
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
   
-  const [formData, setFormData] = useState({
+  // Default form values
+  const defaultFormData = {
     title: "",
     description: "",
     start_time: formatDateTimeForInput(now),
@@ -1187,11 +1193,41 @@ function CreateEvent() {
     recurrence: "none",
     recurrence_end_date: "",
     participants: []
-  });
+  };
+  
+  const [formData, setFormData] = useState(defaultFormData);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info");
   const navigate = useNavigate();
+  
+  // Check if we're in edit mode (passed from event details)
+  useEffect(() => {
+    if (location.state?.editMode && location.state?.event) {
+      const eventToEdit = location.state.event;
+      setIsEditMode(true);
+      setEditId(eventToEdit.id);
+      setMessage(location.state.message || "Editing event");
+      setMessageType(location.state.messageType || "info");
+      
+      // Fill the form with event data
+      setFormData({
+        title: eventToEdit.title || "",
+        description: eventToEdit.description || "",
+        start_time: formatDateTimeForInput(new Date(eventToEdit.start_time)),
+        end_time: formatDateTimeForInput(new Date(eventToEdit.end_time)),
+        venue: eventToEdit.venue || "",
+        priority: eventToEdit.priority || "medium",
+        recurrence: eventToEdit.recurrence || "none",
+        recurrence_end_date: eventToEdit.recurrence_end_date 
+          ? formatDateTimeForInput(new Date(eventToEdit.recurrence_end_date)).split('T')[0]
+          : "",
+        participants: eventToEdit.participants || []
+      });
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

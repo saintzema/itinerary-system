@@ -780,16 +780,21 @@ function Dashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      // Get today's date and 30 days from now for initial load
+      
+      // Get today's date and 365 days from now to show more events
       const today = new Date();
       const endDate = new Date(today);
-      endDate.setDate(today.getDate() + 30);
-
+      endDate.setDate(today.getDate() + 365); // Show events for the next year
+      
+      // Debug log - output with date in readable format
       console.log("Dashboard - Fetching events with date range:", {
-        start_date: today.toISOString(),
-        end_date: endDate.toISOString()
+        start_date: today.toLocaleString(),
+        end_date: endDate.toLocaleString(),
+        start_date_iso: today.toISOString(),
+        end_date_iso: endDate.toISOString()
       });
 
+      // Make the API call with extended date range
       const response = await axios.get(`${API}/events`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -801,7 +806,23 @@ function Dashboard() {
       });
 
       console.log("Dashboard - Events fetched:", response.data);
-      setEvents(response.data);
+      console.log("Dashboard - Number of events:", response.data.length);
+      
+      if (response.data.length === 0) {
+        console.log("Dashboard - No events found, checking without date filtering");
+        
+        // If no events found with date filtering, try fetching all events
+        const allEventsResponse = await axios.get(`${API}/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        
+        console.log("Dashboard - All events fetched:", allEventsResponse.data);
+        setEvents(allEventsResponse.data);
+      } else {
+        setEvents(response.data);
+      }
     } catch (error) {
       console.error("Error fetching events:", error);
       if (error.response) {

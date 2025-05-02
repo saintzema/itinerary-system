@@ -1482,13 +1482,21 @@ function Calendar() {
                                 <div 
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className={`text-xs p-1 mb-1 rounded cursor-pointer truncate ${
-                                    event.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                    event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-green-100 text-green-800'
+                                  className={`text-xs p-1 mb-1 rounded cursor-pointer truncate hover:shadow-md transition-all duration-200 hover:scale-105 ${
+                                    event.priority === 'high' ? 'bg-red-100 text-red-800 border border-red-300' :
+                                    event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                                    'bg-green-100 text-green-800 border border-green-300'
                                   }`}
+                                  data-testid={`calendar-event-${event.id}`}
                                 >
-                                  {formatTime(event.start_time)} {event.title}
+                                  <div className="flex items-center">
+                                    <span className="inline-block w-2 h-2 rounded-full mr-1 
+                                      ${event.priority === 'high' ? 'bg-red-500' : 
+                                        event.priority === 'medium' ? 'bg-yellow-500' : 
+                                        'bg-green-500'}"
+                                    ></span>
+                                    <span>{formatTime(event.start_time)} {event.title}</span>
+                                  </div>
                                 </div>
                               ))}
                             </div>

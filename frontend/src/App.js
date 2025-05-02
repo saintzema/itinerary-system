@@ -943,6 +943,99 @@ function Dashboard() {
           )}
         </div>
       )}
+      
+      {/* Event Details Modal */}
+      {showEventModal && selectedEvent && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" data-testid="event-modal">
+          <div className="relative mx-auto p-0 border w-full max-w-md shadow-lg rounded-lg bg-white overflow-hidden">
+            <div className={`${selectedEvent.priority === 'high' ? 'bg-red-500' : 
+                    selectedEvent.priority === 'medium' ? 'bg-yellow-500' : 
+                    'bg-green-500'} p-4 text-white`}>
+              <div className="flex justify-between items-start">
+                <h3 className="text-xl font-bold">{selectedEvent.title}</h3>
+                <button 
+                  onClick={() => setShowEventModal(false)}
+                  className="text-white hover:text-gray-200 bg-gray-700 bg-opacity-30 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
+                  data-testid="close-modal-button"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-4">
+              {selectedEvent.description && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">Description</h4>
+                  <p className="text-gray-700">{selectedEvent.description}</p>
+                </div>
+              )}
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Time & Location</h4>
+                <p className="text-sm font-medium">{formatDate(selectedEvent.start_time)}</p>
+                <p className="text-sm text-gray-600">to {formatDate(selectedEvent.end_time)}</p>
+                
+                {selectedEvent.venue && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-gray-600">{selectedEvent.venue}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Priority</p>
+                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      selectedEvent.priority === 'high' ? 'bg-red-100 text-red-800' :
+                      selectedEvent.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {selectedEvent.priority.charAt(0).toUpperCase() + selectedEvent.priority.slice(1)}
+                    </div>
+                  </div>
+                  
+                  {selectedEvent.recurrence !== "none" && (
+                    <div>
+                      <p className="text-xs text-gray-500">Recurrence</p>
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {selectedEvent.recurrence.charAt(0).toUpperCase() + selectedEvent.recurrence.slice(1)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t border-gray-200 flex justify-between">
+                <button
+                  onClick={() => {
+                    // Here you would add the delete event logic
+                    setShowEventModal(false);
+                    alert("Delete functionality would be implemented here");
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Delete
+                </button>
+                
+                <button
+                  onClick={() => {
+                    // Here you would add the edit event logic
+                    setShowEventModal(false);
+                    alert("Edit functionality would be implemented here");
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -683,25 +683,44 @@ async def create_event_notifications(event, event_type=NotificationType.EVENT_RE
         message = f"An event you are part of has been cancelled: {event.title} that was scheduled for {event.start_time.strftime('%Y-%m-%d at %H:%M')}"
     
     # Create notifications for each participant
+    notifications_created = 0
     for user_id in participant_ids:
-        # For event reminders, schedule it for 24 hours before the event
-        scheduled_for = None
-        if event_type == NotificationType.EVENT_REMINDER:
-            scheduled_for = event.start_time - timedelta(hours=24)
-            # If the event is less than 24 hours away, send immediately
-            if scheduled_for < datetime.utcnow():
-                scheduled_for = None
+        # For event reminders, create one scheduled for 24 hours before the event
+        # and another one for immediate display
         
-        notification = Notification(
+        # First, create an immediate notification to show in the UI now
+        immediate_notification = Notification(
             user_id=user_id,
-            title=title,
-            message=message,
+            title=f"New Event: {event.title}",
+            message=f"A new event has been added to your schedule: {event.title} on {event.start_time.strftime('%Y-%m-%d at %H:%M')}",
             type=event_type,
             reference_id=event.id,
-            scheduled_for=scheduled_for
+            scheduled_for=None  # Send immediately
         )
         
-        await db.notifications.insert_one(jsonable_encoder(notification))
+        await db.notifications.insert_one(jsonable_encoder(immediate_notification))
+        notifications_created += 1
+        
+        # For reminders, also create a scheduled notification for 24 hours before
+        if event_type == NotificationType.EVENT_REMINDER:
+            scheduled_for = event.start_time - timedelta(hours=24)
+            
+            # Only create scheduled notification if it's in the future
+            if scheduled_for > datetime.utcnow():
+                scheduled_notification = Notification(
+                    user_id=user_id,
+                    title=title,
+                    message=message,
+                    type=event_type,
+                    reference_id=event.id,
+                    scheduled_for=scheduled_for
+                )
+                
+                await db.notifications.insert_one(jsonable_encoder(scheduled_notification))
+                notifications_created += 1
+    
+    logger.info(f"Created {notifications_created} notifications for event ID: {event.id}")
+    return notifications_created
 
 # Update event creation to include notifications
 @api_router.post("/events", response_model=EventResponse)

@@ -426,10 +426,11 @@ async def create_event(event: EventCreate, current_user: dict = Depends(get_curr
     
     # Create notifications for participants
     try:
-        await create_event_notifications(new_event, NotificationType.EVENT_REMINDER)
-        logger.info(f"Created notifications for event: {new_event.id}")
+        notification_count = await create_event_notifications(new_event, NotificationType.EVENT_REMINDER)
+        logger.info(f"Created {notification_count} notifications for event: {new_event.id}")
     except Exception as e:
         logger.error(f"Error creating notifications: {str(e)}")
+        logger.error(f"Exception traceback: {traceback.format_exc()}")
     
     return EventResponse(**created_event)
 

@@ -319,9 +319,12 @@ function Notifications() {
       </button>
       
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50" data-testid="notifications-dropdown">
-          <div className="px-4 py-2 text-sm font-medium text-gray-700 border-b">
-            Notifications
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50" data-testid="notifications-dropdown" id="notifications-dropdown">
+          <div className="px-4 py-2 text-sm font-medium text-gray-700 border-b flex justify-between items-center">
+            <span>Notifications</span>
+            <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs font-bold">
+              {notifications.length}
+            </span>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
@@ -332,14 +335,22 @@ function Notifications() {
               notifications.map(notification => (
                 <div 
                   key={notification.id}
-                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                    notification.status !== "read" ? "bg-blue-50" : ""
+                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer border-l-2 ${
+                    notification.status !== "read" 
+                      ? "bg-blue-50 border-blue-500" 
+                      : "border-transparent"
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                   data-testid={`notification-item-${notification.id}`}
+                  role="button"
+                  aria-label={`Notification: ${notification.title}`}
+                  tabIndex="0"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 flex items-center">
+                      {notification.status !== "read" && (
+                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                      )}
                       {notification.title}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -349,12 +360,30 @@ function Notifications() {
                   <div className="text-sm text-gray-600 mt-1">
                     {notification.message}
                   </div>
+                  <div className="mt-2 text-xs text-blue-600 hover:underline">
+                    {notification.type.includes('event') ? 'View event details' : 'View details'}
+                  </div>
                 </div>
               ))
             )}
           </div>
-          <div className="px-4 py-2 text-xs text-gray-500 border-t text-center">
-            Click a notification to mark it as read
+          <div className="px-4 py-2 text-xs text-gray-500 border-t flex justify-between">
+            <span>Click a notification to view details</span>
+            {notifications.length > 0 && (
+              <button 
+                className="text-blue-600 hover:underline focus:outline-none text-xs"
+                onClick={() => {
+                  // Mark all notifications as read
+                  notifications.forEach(notification => {
+                    if (notification.status !== "read") {
+                      markAsRead(notification.id);
+                    }
+                  });
+                }}
+              >
+                Mark all as read
+              </button>
+            )}
           </div>
         </div>
       )}

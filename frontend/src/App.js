@@ -142,10 +142,35 @@ function ProtectedRoute({ children }) {
 }
 
 // Components
-// Play notification sound
+// Play notification sound - using a simpler approach to avoid browser restrictions
 function playNotificationSound() {
-  const audio = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjEzLjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAASAAAJhgBVVVVVVVVVVVVVVXt7e3t7e3t7e3t7e3umpaWlpaWlpaWlpaWl0dHR0dHR0dHR0dHR0fT09PT09PT09PT09PT///////////8AAAAATGF2YzU4LjE4AAAAAAAAAAAAAAAAJAYAAAAAAAAABYZzwdVuAAAAAAD/+9DEAAAK3IFgTDRgICKAK/mFgQcFH9/jYbn/5f/y///l/5f/ylJCECDhuCDwQBAEAxBBBBAIAgGPgf8E4IBAEAxBB+AgCAY+EHwfggEAQDAEHwQBAMfB/wQBAEAQDH+EAQEBAMDH4IBj/BAEBDcEH4ICG4IPwQEBAQDAEBDkBAQfggEAQDEAwBBwQEE4IBAMQQQQQQDHwQD87/BA5//BA5+EHCDwQfEAQfAgcIPggGP8EDn+d/ggzqwHQkBDVLyEcF3WpaBkhqQYugG5OQm1USjWfv//7E5OT1atMzVKIXurLjXDYyQtLmaiEiQkdTUVpJiRkeXC1WljrU1V/8vtWVE6ZqwjQMV6RmZMRIcnR6Mz5SZF8dHtV////9I9FJEKSlRsqEamzRf/lJ0IZ2Sk6TJHzEzJCJGTMk/JE/k6FCX//5MQWQvnT/6OlClZJSUdHR0dM0ZNBTVTVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//MUZEAAAAGkAAAAAAAAA0gAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//MUZIkAAAGkAAAAAAAAA0gAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-  audio.play().catch(e => console.error("Error playing sound:", e));
+  try {
+    // Use simple beep sound that's created programmatically
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 830; // Notification beep frequency
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Keep the volume reasonable
+    gainNode.gain.value = 0.1;
+    
+    // Play a short beep
+    oscillator.start();
+    setTimeout(() => {
+      oscillator.stop();
+      // Clean up
+      setTimeout(() => {
+        oscillator.disconnect();
+        gainNode.disconnect();
+      }, 100);
+    }, 200);
+  } catch (e) {
+    console.warn("Unable to play notification sound:", e);
+  }
 }
 
 // Notifications component

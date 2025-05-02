@@ -905,9 +905,13 @@ function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {events.map((event) => (
-                <div
+                  <div 
                   key={event.id}
-                  className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  className={`border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+                    highlightedEventId === event.id ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                  onClick={() => handleEventClick(event)}
+                  data-testid={`event-card-${event.id}`}
                 >
                   <div className={`p-4 border-l-4 ${priorityColors[event.priority]}`}>
                     <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
@@ -922,12 +926,15 @@ function Dashboard() {
                       {event.venue && <p><span className="font-medium">Venue:</span> {event.venue}</p>}
                     </div>
                     <div className="mt-3 flex justify-end">
-                      <Link
-                        to={`/events/${event.id}`}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent the card's onClick
+                          handleEventClick(event);
+                        }}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
                         View Details
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -233,6 +233,8 @@ function Notifications() {
     }
   };
   
+  const navigate = useNavigate();
+  
   const handleNotificationClick = (notification) => {
     // Mark as read if not already
     if (notification.status !== "read") {
@@ -243,8 +245,15 @@ function Notifications() {
     if (notification.reference_id && notification.type.includes("event")) {
       // Close dropdown
       setShowDropdown(false);
-      // Navigate to event (implement in a future update)
-      // navigate(`/events/${notification.reference_id}`);
+      
+      // Navigate to event details - first go to dashboard to ensure context is loaded
+      navigate('/dashboard', { 
+        state: { 
+          highlightEventId: notification.reference_id,
+          message: "Viewing event from notification",
+          messageType: "info"
+        } 
+      });
     }
   };
   

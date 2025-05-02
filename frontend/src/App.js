@@ -1103,7 +1103,7 @@ function Dashboard() {
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-gray-200 flex justify-between">
+              <div className="pt-2 border-t border-gray-200 flex justify-between flex-wrap gap-2">
                 <button
                     onClick={async () => {
                       if (confirm("Are you sure you want to delete this event?")) {
@@ -1132,6 +1132,16 @@ function Dashboard() {
                   >
                     Delete Event
                   </button>
+                
+                <div>
+                  <button
+                    onClick={() => setShowEventModal(false)}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-medium py-2 px-4 rounded transition-colors mr-2"
+                    id="close-event-button"
+                    data-testid="close-event-button"
+                  >
+                    Close
+                  </button>
                   
                   <button
                     onClick={() => {
@@ -1152,6 +1162,7 @@ function Dashboard() {
                   >
                     Edit Event
                   </button>
+                </div>
               </div>
             </div>
           </div>

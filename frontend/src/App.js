@@ -1327,7 +1327,20 @@ function CreateEvent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Create New Event</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        {isEditMode ? "Edit Event" : "Create New Event"}
+      </h1>
+
+      {message && (
+        <div className={`px-4 py-3 rounded mb-4 ${
+          messageType === 'success' ? 'bg-green-100 border border-green-400 text-green-700' :
+          messageType === 'info' ? 'bg-blue-100 border border-blue-400 text-blue-700' :
+          messageType === 'warning' ? 'bg-yellow-100 border border-yellow-400 text-yellow-700' :
+          'bg-red-100 border border-red-400 text-red-700'
+        }`}>
+          {message}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

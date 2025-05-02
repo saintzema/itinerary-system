@@ -311,6 +311,7 @@ function Notifications() {
                     notification.status !== "read" ? "bg-blue-50" : ""
                   }`}
                   onClick={() => handleNotificationClick(notification)}
+                  data-testid={`notification-item-${notification.id}`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="text-sm font-medium text-gray-900">

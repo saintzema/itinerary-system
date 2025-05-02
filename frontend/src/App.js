@@ -827,6 +827,25 @@ function Dashboard() {
     const date = new Date(dateString);
     return date.toLocaleString();
   };
+  
+  // Handle selecting an event to show details
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+    
+    // Clear highlight after showing modal
+    setHighlightedEventId(null);
+  };
+  
+  // Check if we need to automatically show an event modal (from notification)
+  useEffect(() => {
+    if (highlightedEventId && events.length > 0) {
+      const eventToShow = events.find(event => event.id === highlightedEventId);
+      if (eventToShow) {
+        handleEventClick(eventToShow);
+      }
+    }
+  }, [highlightedEventId, events]);
 
   return (
     <div className="container mx-auto px-4 py-8">

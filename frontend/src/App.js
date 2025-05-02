@@ -950,6 +950,7 @@ function Dashboard() {
           to="/create-event"
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           data-testid="create-event-button"
+          id="create-new-event-button"
         >
           Create New Event
         </Link>

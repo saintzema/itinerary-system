@@ -1270,27 +1270,43 @@ function CreateEvent() {
       
       console.log("Submitting event data:", eventData);
       
-      const response = await axios.post(`${API}/events`, eventData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      let response;
+      let successMessage;
       
-      console.log("Event created successfully:", response.data);
+      if (isEditMode && editId) {
+        // Update existing event
+        response = await axios.put(`${API}/events/${editId}`, eventData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        successMessage = "Event updated successfully!";
+        console.log("Event updated successfully:", response.data);
+      } else {
+        // Create new event
+        response = await axios.post(`${API}/events`, eventData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        successMessage = "Event created successfully!";
+        console.log("Event created successfully:", response.data);
+      }
       
       // Add a success message to navigate with state and force a reload
       const uniqueKey = new Date().getTime(); // Create a unique key for forcing reload
       navigate("/dashboard", { 
         state: { 
-          message: "Event created successfully!", 
+          message: successMessage, 
           messageType: "success",
           eventId: response.data.id,
           reloadKey: uniqueKey
         } 
       });
     } catch (error) {
-      console.error("Event creation error:", error);
+      console.error("Event operation error:", error);
       
       if (error.response && error.response.data) {
         // Handle error detail which might be an object or string
@@ -1299,10 +1315,10 @@ function CreateEvent() {
           // If detail is an object, convert it to a string
           setError(JSON.stringify(detail));
         } else {
-          setError(detail || "Failed to create event");
+          setError(detail || `Failed to ${isEditMode ? 'update' : 'create'} event`);
         }
       } else {
-        setError("Failed to create event. Please try again.");
+        setError(`Failed to ${isEditMode ? 'update' : 'create'} event. Please try again.`);
       }
     } finally {
       setLoading(false);

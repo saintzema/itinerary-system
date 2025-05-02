@@ -2039,7 +2039,7 @@ function Reports() {
 
   useEffect(() => {
     fetchEventData();
-  }, [reportType, fetchEventData]);
+  }, [reportType, fetchEventData, location.key]);
 
   const handleDateRangeChange = (e) => {
     const { name, value } = e.target;

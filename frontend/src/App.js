@@ -260,25 +260,43 @@ function Notifications() {
   
   const navigate = useNavigate();
   
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     // Mark as read if not already
     if (notification.status !== "read") {
-      markAsRead(notification.id);
+      await markAsRead(notification.id);
     }
     
-    // If it's related to an event, navigate to that event
+    // If it's related to an event, navigate to view that event
     if (notification.reference_id && notification.type.includes("event")) {
-      // Close dropdown
-      setShowDropdown(false);
-      
-      // Navigate to event details - first go to dashboard to ensure context is loaded
-      navigate('/dashboard', { 
-        state: { 
-          highlightEventId: notification.reference_id,
-          message: "Viewing event from notification",
-          messageType: "info"
-        } 
-      });
+      try {
+        // Close dropdown
+        setShowDropdown(false);
+        
+        // First fetch the event details to ensure it exists
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API}/events/${notification.reference_id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.data) {
+          console.log("Found event from notification:", response.data);
+          
+          // Navigate to dashboard with instruction to highlight this event
+          navigate('/dashboard', { 
+            state: { 
+              highlightEventId: notification.reference_id,
+              message: `Viewing event: ${response.data.title}`,
+              messageType: "info",
+              forceRefresh: Date.now() // Force a refresh
+            } 
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching event from notification:", error);
+        alert("Could not find the referenced event. It may have been deleted.");
+      }
     }
   };
   

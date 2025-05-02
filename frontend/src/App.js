@@ -1002,10 +1002,9 @@ function Dashboard() {
               {events.map((event) => (
                   <div 
                   key={event.id}
-                  className={`border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+                  className={`border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
                     highlightedEventId === event.id ? 'ring-2 ring-blue-500' : ''
                   }`}
-                  onClick={() => handleEventClick(event)}
                   data-testid={`event-card-${event.id}`}
                 >
                   <div className={`p-4 border-l-4 ${priorityColors[event.priority]}`}>
@@ -1022,11 +1021,9 @@ function Dashboard() {
                     </div>
                     <div className="mt-3 flex justify-end">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent the card's onClick
-                          handleEventClick(event);
-                        }}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        onClick={() => handleEventClick(event)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium"
+                        data-testid={`view-details-button-${event.id}`}
                       >
                         View Details
                       </button>

@@ -1122,12 +1122,14 @@ function CreateEvent() {
       
       console.log("Event created successfully:", response.data);
       
-      // Add a success message to navigate with state
+      // Add a success message to navigate with state and force a reload
+      const uniqueKey = new Date().getTime(); // Create a unique key for forcing reload
       navigate("/dashboard", { 
         state: { 
           message: "Event created successfully!", 
           messageType: "success",
-          eventId: response.data.id
+          eventId: response.data.id,
+          reloadKey: uniqueKey
         } 
       });
     } catch (error) {

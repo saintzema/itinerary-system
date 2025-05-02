@@ -1128,6 +1128,7 @@ function Calendar() {
   const [mode, setMode] = useState("month"); // "day", "week", "month"
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const location = useLocation();
 
   // Format date for display
   const formatDate = (date) => {

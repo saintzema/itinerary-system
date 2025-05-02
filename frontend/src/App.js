@@ -1106,26 +1106,52 @@ function Dashboard() {
               
               <div className="pt-2 border-t border-gray-200 flex justify-between">
                 <button
-                  onClick={() => {
-                    // Here you would add the delete event logic
-                    setShowEventModal(false);
-                    alert("Delete functionality would be implemented here");
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
-                >
-                  Delete
-                </button>
-                
-                <button
-                  onClick={() => {
-                    // Here you would add the edit event logic
-                    setShowEventModal(false);
-                    alert("Edit functionality would be implemented here");
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
-                >
-                  Edit
-                </button>
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to delete this event?")) {
+                        try {
+                          setShowEventModal(false);
+                          const token = localStorage.getItem("token");
+                          await axios.delete(`${API}/events/${selectedEvent.id}`, {
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                          });
+                          
+                          // Refresh events after deletion
+                          fetchEvents();
+                          setSuccessMessage("Event deleted successfully");
+                          setMessageType("success");
+                        } catch (error) {
+                          console.error("Error deleting event:", error);
+                          setError("Failed to delete event. Please try again.");
+                        }
+                      }
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                    data-testid="delete-event-button"
+                  >
+                    Delete
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Navigate to an edit form (would be implemented in a real application)
+                      setShowEventModal(false);
+                      // For now, just show a confirmation
+                      navigate('/create-event', {
+                        state: {
+                          editMode: true,
+                          event: selectedEvent,
+                          message: "You can edit this event and submit to update it",
+                          messageType: "info"
+                        }
+                      });
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                    data-testid="edit-event-button"
+                  >
+                    Edit
+                  </button>
               </div>
             </div>
           </div>

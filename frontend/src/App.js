@@ -1301,60 +1301,129 @@ function Calendar() {
     const endTime = new Date(event.end_time);
     
     const priorityColors = {
-      high: "bg-red-100 text-red-800 border-red-200",
-      medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      low: "bg-green-100 text-green-800 border-green-200",
+      high: {
+        bg: "bg-red-50",
+        border: "border-red-300",
+        text: "text-red-800",
+        darkBg: "bg-red-500",
+        icon: "bg-red-100 text-red-600"
+      },
+      medium: {
+        bg: "bg-yellow-50",
+        border: "border-yellow-300",
+        text: "text-yellow-800",
+        darkBg: "bg-yellow-500",
+        icon: "bg-yellow-100 text-yellow-600"
+      },
+      low: {
+        bg: "bg-green-50",
+        border: "border-green-300",
+        text: "text-green-800",
+        darkBg: "bg-green-500",
+        icon: "bg-green-100 text-green-600"
+      }
     };
     
+    const colors = priorityColors[event.priority];
+    
+    // Calculate duration in minutes
+    const durationMs = endTime - startTime;
+    const durationMins = Math.floor(durationMs / 60000);
+    const hours = Math.floor(durationMins / 60);
+    const minutes = durationMins % 60;
+    const durationText = `${hours > 0 ? `${hours} hour${hours !== 1 ? 's' : ''}` : ''}${hours > 0 && minutes > 0 ? ', ' : ''}${minutes > 0 ? `${minutes} minute${minutes !== 1 ? 's' : ''}` : ''}`;
+    
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-        <div className="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-          <div className={`border-l-4 p-4 ${priorityColors[event.priority]}`}>
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" data-testid="event-modal">
+        <div className="relative mx-auto p-0 border w-full max-w-md shadow-lg rounded-lg bg-white overflow-hidden">
+          <div className={`${colors.darkBg} p-4 text-white`}>
             <div className="flex justify-between items-start">
               <h3 className="text-xl font-bold">{event.title}</h3>
               <button 
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-white hover:text-gray-200 bg-gray-700 bg-opacity-30 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
+                data-testid="close-modal-button"
               >
                 ✕
               </button>
             </div>
+          </div>
+          
+          <div className={`p-4 ${colors.bg}`}>
+            {event.description && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Description</h4>
+                <p className="text-gray-700">{event.description}</p>
+              </div>
+            )}
             
-            <div className="mt-4">
-              {event.description && (
-                <p className="text-gray-700 mb-3">{event.description}</p>
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Time & Location</h4>
+              <div className="grid grid-cols-6 gap-2">
+                <div className="col-span-1">
+                  <div className={`${colors.icon} h-10 w-10 rounded-full flex items-center justify-center`}>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="col-span-5">
+                  <p className="text-sm font-medium">{formatDate(startTime)}</p>
+                  <p className="text-sm text-gray-600">{formatTime(startTime)} - {formatTime(endTime)} ({durationText})</p>
+                </div>
+              </div>
+              
+              {event.venue && (
+                <div className="grid grid-cols-6 gap-2 mt-3">
+                  <div className="col-span-1">
+                    <div className={`${colors.icon} h-10 w-10 rounded-full flex items-center justify-center`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="col-span-5">
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-gray-600">{event.venue}</p>
+                  </div>
+                </div>
               )}
-              
-              <div className="text-sm">
-                <p className="mb-1">
-                  <span className="font-medium">Start:</span> {formatDate(startTime)} at {formatTime(startTime)}
-                </p>
-                <p className="mb-1">
-                  <span className="font-medium">End:</span> {formatDate(endTime)} at {formatTime(endTime)}
-                </p>
-                {event.venue && (
-                  <p className="mb-1">
-                    <span className="font-medium">Venue:</span> {event.venue}
-                  </p>
-                )}
-                <p className="mb-1">
-                  <span className="font-medium">Priority:</span> {event.priority.charAt(0).toUpperCase() + event.priority.slice(1)}
-                </p>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Details</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500">Priority</p>
+                  <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    event.priority === 'high' ? 'bg-red-100 text-red-800' :
+                    event.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {event.priority.charAt(0).toUpperCase() + event.priority.slice(1)}
+                  </div>
+                </div>
+                
                 {event.recurrence !== "none" && (
-                  <p className="mb-1">
-                    <span className="font-medium">Recurrence:</span> {event.recurrence.charAt(0).toUpperCase() + event.recurrence.slice(1)}
-                  </p>
+                  <div>
+                    <p className="text-xs text-gray-500">Recurrence</p>
+                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {event.recurrence.charAt(0).toUpperCase() + event.recurrence.slice(1)}
+                    </div>
+                  </div>
                 )}
               </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Link 
-                  to={`/events/${event.id}`}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  View Details
-                </Link>
-              </div>
+            </div>
+            
+            <div className="pt-2 border-t border-gray-200 flex justify-end">
+              <Link 
+                to={`/events/${event.id}`}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors"
+                data-testid="view-event-details-button"
+              >
+                View Details
+              </Link>
             </div>
           </div>
         </div>

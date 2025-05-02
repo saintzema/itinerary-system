@@ -562,13 +562,27 @@ async def process_notifications():
         try:
             # Find notifications that are scheduled and due
             now = datetime.utcnow()
-            pending_notifications = await db.notifications.find({
+            
+            # Log the current time for debugging
+            logger.info(f"Checking for notifications at {now.isoformat()}")
+            
+            # Query for pending notifications
+            query = {
                 "status": NotificationStatus.PENDING,
                 "$or": [
                     {"scheduled_for": None},  # Send immediately
                     {"scheduled_for": {"$lte": now}}  # Due to be sent
                 ]
-            }).to_list(100)
+            }
+            
+            # Log the query
+            logger.info(f"Notification query: {query}")
+            
+            # Find pending notifications
+            pending_notifications = await db.notifications.find(query).to_list(100)
+            
+            # Log the number of pending notifications
+            logger.info(f"Found {len(pending_notifications)} pending notifications")
             
             for notification in pending_notifications:
                 # Mark as sent
@@ -583,11 +597,13 @@ async def process_notifications():
                 # For now, we just log it
             
             # Sleep before next check
-            await asyncio.sleep(60)  # Check every minute
+            logger.info("Sleeping for 15 seconds before next notification check")
+            await asyncio.sleep(15)  # Check more frequently (15 seconds)
             
         except Exception as e:
             logger.error(f"Error in notification service: {str(e)}")
-            await asyncio.sleep(60)  # Retry after a minute
+            logger.error(f"Exception traceback: {traceback.format_exc()}")
+            await asyncio.sleep(30)  # Retry after 30 seconds
 
 # Start the notification background task
 @app.on_event("startup")

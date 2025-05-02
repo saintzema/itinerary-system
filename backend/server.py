@@ -423,6 +423,13 @@ async def create_event(event: EventCreate, current_user: dict = Depends(get_curr
     result = await db.events.insert_one(jsonable_encoder(new_event))
     created_event = await db.events.find_one({"_id": result.inserted_id})
     
+    # Create notifications for participants
+    try:
+        await create_event_notifications(new_event, NotificationType.EVENT_REMINDER)
+        logger.info(f"Created notifications for event: {new_event.id}")
+    except Exception as e:
+        logger.error(f"Error creating notifications: {str(e)}")
+    
     return EventResponse(**created_event)
 
 @api_router.get("/events", response_model=List[EventResponse])

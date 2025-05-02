@@ -266,7 +266,7 @@ class ItineraryAPITester:
             if get_success and isinstance(response, list):
                 for notification in response:
                     if notification["id"] == self.notification_id:
-                        if notification["read"]:
+                        if notification["status"] == "read":
                             print("✅ Notification successfully marked as read")
                             return True
                         else:

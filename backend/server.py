@@ -18,7 +18,6 @@ import asyncio
 from threading import Thread
 import time
 import traceback
-import traceback
 
 # Constants
 ROOT_DIR = Path(__file__).parent

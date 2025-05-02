@@ -1038,17 +1038,19 @@ function Dashboard() {
       
       {/* Event Details Modal */}
       {showEventModal && selectedEvent && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" data-testid="event-modal">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" data-testid="event-modal" id="event-modal">
           <div className="relative mx-auto p-0 border w-full max-w-md shadow-lg rounded-lg bg-white overflow-hidden">
             <div className={`${selectedEvent.priority === 'high' ? 'bg-red-500' : 
                     selectedEvent.priority === 'medium' ? 'bg-yellow-500' : 
                     'bg-green-500'} p-4 text-white`}>
               <div className="flex justify-between items-start">
-                <h3 className="text-xl font-bold">{selectedEvent.title}</h3>
+                <h3 className="text-xl font-bold" id="event-modal-title">{selectedEvent.title}</h3>
                 <button 
                   onClick={() => setShowEventModal(false)}
                   className="text-white hover:text-gray-200 bg-gray-700 bg-opacity-30 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
                   data-testid="close-modal-button"
+                  id="close-modal-button"
+                  aria-label="Close"
                 >
                   ✕
                 </button>

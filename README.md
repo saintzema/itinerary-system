@@ -31,7 +31,7 @@ A full-featured itinerary planning and scheduling system for institutions and of
 #### Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/itinerary-management-system.git
+git clone https://github.com/yourusername/itinerary-system.git
 cd itinerary-management-system
 ```
 

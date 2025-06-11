@@ -318,7 +318,7 @@ class ItineraryAPITester:
 
 def main():
     # Get the backend URL from the frontend .env file
-    backend_url = "https://17f89ba1-fcf2-4087-ae44-02552831c53c.preview.emergentagent.com"
+    backend_url = "https://0560f427-a632-4f1f-a739-f1ac1b88fae5.preview.emergentagent.com"
     
     # Run the tests
     tester = ItineraryAPITester(backend_url)

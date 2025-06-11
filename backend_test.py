@@ -322,6 +322,11 @@ def main():
     
     # Run the tests
     tester = ItineraryAPITester(backend_url)
+    
+    # Try to create a test user first
+    print("\n🔍 Attempting to create test user first...")
+    tester.test_register()
+    
     return tester.run_all_tests()
 
 if __name__ == "__main__":

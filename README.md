@@ -1,180 +1,239 @@
-# Automated Itinerary Management System
+# Itinerary Management System
 
-A full-featured itinerary planning and scheduling system for institutions and offices, allowing efficient management of tasks, events, and appointments.
+A comprehensive event scheduling and management system built with FastAPI (backend) and React (frontend).
 
-## Features
+## ✨ Features
 
-- **User Management**: Registration, authentication, and role-based access control
-- **Event Management**: Create, edit, delete events with scheduling details
-- **Calendar View**: Visual calendar to display and manage events
-- **Notifications**: Real-time notifications for upcoming events with sound alerts
-- **Reports**: Generate and export reports on past and upcoming events
-- **Mobile Responsive**: Works on all devices
+### 🔐 **Authentication System**
+- User registration and login
+- JWT-based authentication
+- Role-based access control (Admin, Staff, User)
+- Protected routes and secure API endpoints
 
-## Tech Stack
+### 📅 **Event Management**
+- Create, edit, and delete events
+- Event scheduling with conflict detection
+- Priority levels (High, Medium, Low)
+- Recurring events support
+- Venue and participant management
 
-- **Frontend**: React.js with Tailwind CSS
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **Authentication**: JWT (JSON Web Tokens)
+### 🔔 **Advanced Notifications**
+- **Real-time sound alerts** when events are about to start (5 minutes before)
+- **Browser push notifications** for upcoming events
+- **In-app notification system** with bell icon
+- Notification history and read/unread status
 
-## Getting Started
+### 🎨 **Modern UI/UX**
+- Responsive design with Tailwind CSS
+- Interactive event cards and modals
+- Calendar view (coming soon)
+- Dashboard with event overview
+- Clean, professional interface
+
+### 📊 **Additional Features**
+- Event reports and analytics (coming soon)
+- User management for admins
+- Real-time updates
+- Mobile-responsive design
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js (v14+)
-- Python (v3.8+)
+- Node.js 16+ and yarn
+- Python 3.11+
 - MongoDB
 
 ### Installation
 
-#### Clone the repository
-
+1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/itinerary-system.git
+git clone <your-repo-url>
 cd itinerary-management-system
 ```
 
-#### Backend Setup
-
-1. Navigate to the backend directory:
-
+2. **Backend Setup**
 ```bash
 cd backend
-```
-
-2. Create and activate a virtual environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-
-```bash
 pip install -r requirements.txt
+
+# Create .env file
+echo "MONGO_URL=mongodb://localhost:27017" > .env
+echo "DB_NAME=itinerary_management" >> .env
 ```
 
-4. Create a `.env` file in the backend directory with the following:
-
-```
-MONGO_URL="mongodb://localhost:27017"
-DB_NAME="itinerary_management"
-```
-
-5. Start the backend server:
-
+3. **Frontend Setup**
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-```
-
-#### Frontend Setup
-
-1. Navigate to the frontend directory:
-
-```bash
-cd ../frontend
-```
-
-2. Install dependencies:
-
-```bash
+cd frontend
 yarn install
+
+# Create .env file
+echo "REACT_APP_BACKEND_URL=http://localhost:8001" > .env
 ```
 
-3. Create a `.env` file in the frontend directory with:
-
-```
-REACT_APP_BACKEND_URL="http://localhost:8001"
-```
-
-4. Start the frontend server:
-
+4. **Start the services**
 ```bash
+# Start backend (from backend directory)
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# Start frontend (from frontend directory)
 yarn start
+
+# Start MongoDB
+sudo systemctl start mongodb
 ```
 
-5. Open your browser and navigate to `http://localhost:3000`
+5. **Access the application**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8001
+- API Documentation: http://localhost:8001/docs
 
-## Docker Deployment
+## 📁 Project Structure
 
-For a containerized setup:
-
-1. Make sure Docker and Docker Compose are installed on your system
-2. Create a `docker-compose.yml` file:
-
-```yaml
-version: '3'
-services:
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    
-  backend:
-    build: ./backend
-    ports:
-      - "8001:8001"
-    environment:
-      - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=itinerary_management
-    depends_on:
-      - mongodb
-    
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_BACKEND_URL=http://localhost:8001
-    depends_on:
-      - backend
-
-volumes:
-  mongodb_data:
+```
+itinerary-management-system/
+├── backend/
+│   ├── server.py          # FastAPI application
+│   ├── requirements.txt   # Python dependencies
+│   └── .env              # Environment variables
+├── frontend/
+│   ├── src/
+│   │   ├── App.js        # Main React component
+│   │   ├── App.css       # Styles
+│   │   └── index.js      # Entry point
+│   ├── package.json      # Node.js dependencies
+│   └── .env              # Environment variables
+└── README.md
 ```
 
-3. Run the application using Docker Compose:
+## 🔧 Technology Stack
+
+### Backend
+- **FastAPI**: Modern Python web framework
+- **MongoDB**: NoSQL database with Motor driver
+- **JWT**: JSON Web Tokens for authentication
+- **Pydantic**: Data validation and serialization
+- **Uvicorn**: ASGI server
+
+### Frontend
+- **React 19**: Modern React with hooks
+- **Tailwind CSS**: Utility-first CSS framework
+- **Axios**: HTTP client for API calls
+- **React Router**: Client-side routing
+- **Web APIs**: Notifications and Audio APIs
+
+## 🎯 Usage
+
+### Creating Your First Event
+
+1. **Register/Login**: Create an account or sign in
+2. **Navigate to Dashboard**: View your events overview
+3. **Create Event**: Click "Create New Event" button
+4. **Fill Details**: Add title, description, time, venue, priority
+5. **Save**: Event will appear in your dashboard
+6. **Get Notified**: Receive sound alerts 5 minutes before event starts
+
+### Managing Notifications
+
+- **Bell Icon**: Click to view all notifications
+- **Event Alerts**: Automatic notifications for upcoming events
+- **Browser Permissions**: Allow notifications for best experience
+- **Sound Alerts**: Automatic audio notifications for imminent events
+
+## 🔐 API Endpoints
+
+### Authentication
+- `POST /api/token` - User login
+- `POST /api/users` - User registration
+- `GET /api/users/me` - Get current user
+
+### Events
+- `GET /api/events` - List user events
+- `POST /api/events` - Create new event
+- `GET /api/events/{id}` - Get event details
+- `PUT /api/events/{id}` - Update event
+- `DELETE /api/events/{id}` - Delete event
+
+### Notifications
+- `GET /api/notifications` - Get user notifications
+- `PUT /api/notifications/{id}/read` - Mark as read
+
+## 🛠️ Development
+
+### Environment Variables
+
+**Backend (.env)**
+```env
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=itinerary_management
+SECRET_KEY=your-secret-key-here
+```
+
+**Frontend (.env)**
+```env
+REACT_APP_BACKEND_URL=http://localhost:8001
+```
+
+### Running Tests
 
 ```bash
-docker-compose up -d
+# Backend tests
+cd backend
+python -m pytest
+
+# Frontend tests
+cd frontend
+yarn test
 ```
 
-4. Access the application at `http://localhost:3000`
+## 🚀 Deployment
 
-## Usage
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions including:
 
-1. **Register an Account**: Create a new user account with appropriate role
-2. **Login**: Use your credentials to log in
-3. **Create Events**: Add new events with details including title, time, venue, priority
-4. **Manage Events**: View, edit, and delete events
-5. **View Calendar**: Check your schedule in a visual calendar interface
-6. **Check Notifications**: Receive alerts for upcoming events
-7. **Generate Reports**: Create reports on event data
+- Docker deployment
+- Cloud platforms (Heroku, Railway, Vercel)
+- VPS deployment
+- SSL setup
+- Production optimization
 
-## Administrator Setup
+## 🐛 Troubleshooting
 
-To create the first admin user:
+### Common Issues
 
-1. Register a normal user
-2. Access the MongoDB database:
+1. **Database Connection Error**
+   - Ensure MongoDB is running
+   - Check MONGO_URL in backend/.env
 
-```bash
-mongo
-use itinerary_management
-db.users.updateOne({username: "your_username"}, {$set: {role: "admin"}})
-```
+2. **CORS Errors**
+   - Verify REACT_APP_BACKEND_URL matches backend URL
+   - Check backend CORS configuration
 
-Alternatively, use the debug endpoint (in development only):
-```
-curl -X POST http://localhost:8001/api/debug/create-test-user
-```
+3. **Notification Permissions**
+   - Allow browser notifications when prompted
+   - Check browser notification settings
 
-This will create a test user with username: testuser and password: password123
+4. **Sound Not Playing**
+   - Ensure browser allows audio autoplay
+   - Check if user has interacted with the page first
 
-## License
+## 🤝 Contributing
 
-This project is licensed under the MIT License.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🎉 Acknowledgments
+
+- FastAPI for the excellent Python web framework
+- React team for the robust frontend library
+- MongoDB for the flexible database solution
+- Tailwind CSS for the utility-first styling
+
+---
+
+**Built with ❤️ for efficient event management**

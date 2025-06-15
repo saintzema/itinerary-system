@@ -91,7 +91,7 @@ class UserBase(BaseModel):
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50)
     full_name: str = Field(..., min_length=1, max_length=100)
-    role: str = Field(default="user", regex="^(admin|staff|user)$")
+    role: str = Field(default="user", pattern="^(admin|staff|user)$")
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)

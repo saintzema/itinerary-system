@@ -1399,8 +1399,8 @@ function CreateEvent() {
         // Handle error detail which might be an object or string
         const detail = error.response.data.detail;
         if (typeof detail === 'object') {
-          // If detail is an object, convert it to a string
-          setError(JSON.stringify(detail));
+          // If detail is an object, provide a user-friendly message
+          setError(`Failed to ${isEditMode ? 'update' : 'create'} event. Please check your input and try again.`);
         } else {
           setError(detail || `Failed to ${isEditMode ? 'update' : 'create'} event`);
         }

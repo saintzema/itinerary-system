@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: itinerary-backend
+    env: python
+    plan: free
+    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1
+    envVars:
+      - key: MONGO_URL
+        value: mongodb+srv://username:password@cluster.mongodb.net/
+      - key: DB_NAME
+        value: itinerary_management
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+    healthCheckPath: /api/health

@@ -3,16 +3,5 @@
   "env": {
     "REACT_APP_BACKEND_URL": "https://your-backend-domain.onrender.com",
     "GENERATE_SOURCEMAP": "false"
-  },
-  "build": {
-    "env": {
-      "REACT_APP_BACKEND_URL": "https://your-backend-domain.onrender.com",
-      "GENERATE_SOURCEMAP": "false"
-    }
-  },
-  "functions": {
-    "app/api/**": {
-      "maxDuration": 30
-    }
   }
 }

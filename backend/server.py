@@ -614,12 +614,18 @@ if os.getenv("DEBUG", "false").lower() == "true":
             })
         return events
 
+# if __name__ == "__main__":
+#     import uvicorn
+#     port = int(os.environ.get("PORT", 8000))  # use PORT if set, fallback to 8000
+#     uvicorn.run(
+#         "server:app",
+#         host="0.0.0.0",
+#         port=port,
+#         log_level="info"
+#     )
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # use PORT if set, fallback to 8000
-    uvicorn.run(
-        "server:app",
-        host="0.0.0.0",
-        port=port,
-        log_level="info"
-    )
+    import os
+
+    port = int(os.environ.get("PORT", 8000))  # Get PORT from Railway
+    uvicorn.run("server:app", host="0.0.0.0", port=port)

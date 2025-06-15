@@ -1,6 +1,8 @@
 import requests
 import sys
 import uuid
+import random
+import string
 from datetime import datetime, timedelta
 
 class ItineraryAPITester:
@@ -10,9 +12,11 @@ class ItineraryAPITester:
         self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.test_user = "testuser"
-        self.test_password = "password123"
-        self.test_email = "testuser@example.com"
+        # Generate random username to avoid conflicts
+        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        self.test_user = f"testuser_{random_suffix}"
+        self.test_password = "Password123!"
+        self.test_email = f"testuser_{random_suffix}@example.com"
         self.test_full_name = "Test User"
         self.event_id = None
         self.notification_id = None

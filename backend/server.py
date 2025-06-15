@@ -1,213 +1,149 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
-import logging
-from pathlib import Path
-from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
-from typing import List, Optional, Dict, Any
-import uuid
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
 from datetime import datetime, timedelta
-from enum import Enum
-import jwt
 from passlib.context import CryptContext
-from fastapi.encoders import jsonable_encoder
+from jose import JWTError, jwt
+import os
+import uuid
+from dotenv import load_dotenv
 import asyncio
-from threading import Thread
-import time
-import traceback
+import logging
+from contextlib import asynccontextmanager
 
-# Constants
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-SECRET_KEY = "temporarysecretkey"  # In production, use a proper secret key from environment variables
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Configuration
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DB_NAME", "itinerary_management")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
+ACCESS_TOKEN_EXPIRE_HOURS = 24 * 30  # 30 days
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# Database connection
+client = None
+database = None
+
+# Lifespan event handler
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    global client, database
+    try:
+        client = AsyncIOMotorClient(MONGO_URL)
+        database = client[DB_NAME]
+        
+        # Test the connection
+        await client.admin.command('ismaster')
+        logger.info(f"Connected to MongoDB at {MONGO_URL}")
+        logger.info(f"Using database: {DB_NAME}")
+        
+        # Create indexes for better performance
+        await create_indexes()
+        
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        raise
+    
+    yield
+    
+    # Shutdown
+    if client:
+        client.close()
+        logger.info("MongoDB connection closed")
+
+# Create FastAPI app with lifespan
+app = FastAPI(
+    title="Itinerary Management System API",
+    description="A comprehensive event scheduling and management system",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
-
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
-# Enums
-class UserRole(str, Enum):
-    ADMIN = "admin"
-    STAFF = "staff"
-    USER = "user"
-
-class PriorityLevel(str, Enum):
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
-
-class RecurrenceType(str, Enum):
-    NONE = "none"
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
-
-# Define Models
-class User(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+# Pydantic models
+class UserBase(BaseModel):
     email: EmailStr
-    username: str
-    hashed_password: str
-    full_name: str
-    role: UserRole
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    username: str = Field(..., min_length=3, max_length=50)
+    full_name: str = Field(..., min_length=1, max_length=100)
+    role: str = Field(default="user", regex="^(admin|staff|user)$")
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str
-    password: str
-    full_name: str
-    role: UserRole = UserRole.USER
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6)
 
-class UserResponse(BaseModel):
+class User(UserBase):
     id: str
-    email: EmailStr
-    username: str
-    full_name: str
-    role: UserRole
     created_at: datetime
-
-class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
-    role: Optional[UserRole] = None
+    is_active: bool = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-class TokenData(BaseModel):
-    username: str
-
-class Event(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str
-    description: Optional[str] = None
+class EventBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=1000)
     start_time: datetime
     end_time: datetime
-    venue: Optional[str] = None
-    priority: PriorityLevel = PriorityLevel.MEDIUM
-    recurrence: RecurrenceType = RecurrenceType.NONE
+    venue: Optional[str] = Field(None, max_length=200)
+    priority: str = Field(default="medium", regex="^(low|medium|high)$")
+    recurrence: str = Field(default="none", regex="^(none|daily|weekly|monthly)$")
     recurrence_end_date: Optional[datetime] = None
-    created_by: str  # User ID
-    participants: List[str] = []  # List of User IDs
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    participants: List[str] = Field(default_factory=list)
 
-class EventCreate(BaseModel):
-    title: str
-    description: Optional[str] = None
-    start_time: datetime
-    end_time: datetime
-    venue: Optional[str] = None
-    priority: PriorityLevel = PriorityLevel.MEDIUM
-    recurrence: RecurrenceType = RecurrenceType.NONE
-    recurrence_end_date: Optional[datetime] = None
-    participants: List[str] = []
-    
-    # Add validator for recurrence_end_date
-    @model_validator(mode='before')
-    @classmethod
-    def validate_empty_string_dates(cls, data):
-        if isinstance(data, dict):
-            # Handle empty string for recurrence_end_date
-            if 'recurrence_end_date' in data and data['recurrence_end_date'] == "":
-                data['recurrence_end_date'] = None
-                
-            # If recurrence is 'none', ensure recurrence_end_date is None
-            if 'recurrence' in data and data['recurrence'] == 'none':
-                data['recurrence_end_date'] = None
-        return data
+class EventCreate(EventBase):
+    pass
 
-class EventUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+class EventUpdate(EventBase):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    venue: Optional[str] = None
-    priority: Optional[PriorityLevel] = None
-    recurrence: Optional[RecurrenceType] = None
-    recurrence_end_date: Optional[datetime] = None
-    participants: Optional[List[str]] = None
 
-class EventResponse(BaseModel):
+class Event(EventBase):
     id: str
-    title: str
-    description: Optional[str]
-    start_time: datetime
-    end_time: datetime
-    venue: Optional[str]
-    priority: PriorityLevel
-    recurrence: RecurrenceType
-    recurrence_end_date: Optional[datetime]
     created_by: str
-    participants: List[str]
     created_at: datetime
     updated_at: datetime
 
-class NotificationStatus(str, Enum):
-    PENDING = "pending"
-    SENT = "sent"
-    READ = "read"
-
-class NotificationType(str, Enum):
-    EVENT_REMINDER = "event_reminder"
-    EVENT_UPDATE = "event_update"
-    EVENT_CANCELLATION = "event_cancellation"
-    SYSTEM = "system"
-
-class Notification(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    title: str
-    message: str
-    type: NotificationType
-    status: NotificationStatus = NotificationStatus.PENDING
-    reference_id: Optional[str] = None  # Reference to an event
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    scheduled_for: Optional[datetime] = None  # When the notification should be sent
-    read_at: Optional[datetime] = None
-
-class NotificationCreate(BaseModel):
-    user_id: str
-    title: str
-    message: str
-    type: NotificationType
+class NotificationBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=500)
+    type: str = Field(..., regex="^(event_created|event_updated|event_deleted|event_reminder)$")
     reference_id: Optional[str] = None
-    scheduled_for: Optional[datetime] = None
 
-class NotificationResponse(BaseModel):
+class Notification(NotificationBase):
     id: str
     user_id: str
-    title: str
-    message: str
-    type: NotificationType
-    status: NotificationStatus
-    reference_id: Optional[str]
+    status: str = Field(default="unread", regex="^(read|unread)$")
     created_at: datetime
-    scheduled_for: Optional[datetime]
-    read_at: Optional[datetime]
+    read_at: Optional[datetime] = None
 
-# Helper functions
+# Utility functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -219,30 +155,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_user_by_username(username: str):
-    user = await db.users.find_one({"username": username})
-    if user:
-        return user
-    return None
-
-async def authenticate_user(username: str, password: str):
-    user = await get_user_by_username(username)
-    if not user:
-        logger.warning(f"User not found: {username}")
-        return False
-    
-    password_check = verify_password(password, user["hashed_password"])
-    if not password_check:
-        logger.warning(f"Invalid password for user: {username}")
-        return False
-    
-    logger.info(f"Authentication successful for user: {username}")
-    return user
+async def create_indexes():
+    """Create database indexes for better performance"""
+    try:
+        # User indexes
+        await database.users.create_index("username", unique=True)
+        await database.users.create_index("email", unique=True)
+        
+        # Event indexes
+        await database.events.create_index("created_by")
+        await database.events.create_index("start_time")
+        await database.events.create_index([("created_by", 1), ("start_time", 1)])
+        
+        # Notification indexes
+        await database.notifications.create_index("user_id")
+        await database.notifications.create_index([("user_id", 1), ("status", 1)])
+        
+        logger.info("Database indexes created successfully")
+    except Exception as e:
+        logger.warning(f"Failed to create some indexes: {e}")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -255,744 +191,435 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
-    except:
+    except JWTError:
         raise credentials_exception
-    user = await get_user_by_username(username=token_data.username)
+    
+    user = await database.users.find_one({"username": username})
     if user is None:
         raise credentials_exception
-    return user
+    
+    return User(**user, id=user["_id"])
 
-async def get_current_active_user(current_user: dict = Depends(get_current_user)):
+# Background tasks
+async def create_notification(user_id: str, title: str, message: str, notification_type: str, reference_id: str = None):
+    """Create a notification for a user"""
+    try:
+        notification_data = {
+            "_id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "title": title,
+            "message": message,
+            "type": notification_type,
+            "reference_id": reference_id,
+            "status": "unread",
+            "created_at": datetime.utcnow(),
+            "read_at": None
+        }
+        
+        await database.notifications.insert_one(notification_data)
+        logger.info(f"Notification created for user {user_id}: {title}")
+    except Exception as e:
+        logger.error(f"Failed to create notification: {e}")
+
+# API Routes
+
+@app.get("/api/")
+async def root():
+    """Health check endpoint"""
+    return {"message": "Hello from the Itinerary Management System API", "version": "1.0.0", "status": "healthy"}
+
+@app.get("/api/health")
+async def health_check():
+    """Detailed health check"""
+    try:
+        # Check database connection
+        await client.admin.command('ismaster')
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    
+    return {
+        "status": "healthy" if db_status == "healthy" else "unhealthy",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0"
+    }
+
+# Authentication endpoints
+@app.post("/api/users", response_model=User)
+async def create_user(user: UserCreate, background_tasks: BackgroundTasks):
+    """Register a new user"""
+    try:
+        # Check if user already exists
+        existing_user = await database.users.find_one({
+            "$or": [
+                {"username": user.username},
+                {"email": user.email}
+            ]
+        })
+        
+        if existing_user:
+            if existing_user["username"] == user.username:
+                raise HTTPException(status_code=400, detail="Username already registered")
+            else:
+                raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Create new user
+        user_data = {
+            "_id": str(uuid.uuid4()),
+            "email": user.email,
+            "username": user.username,
+            "full_name": user.full_name,
+            "role": user.role,
+            "hashed_password": get_password_hash(user.password),
+            "created_at": datetime.utcnow(),
+            "is_active": True
+        }
+        
+        await database.users.insert_one(user_data)
+        
+        # Create welcome notification
+        background_tasks.add_task(
+            create_notification,
+            user_data["_id"],
+            "Welcome to Itinerary Management System!",
+            "Welcome! You can now start creating and managing your events.",
+            "event_created"
+        )
+        
+        logger.info(f"User created: {user.username}")
+        return User(**user_data, id=user_data["_id"])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Login endpoint"""
+    try:
+        user = await database.users.find_one({"username": form_data.username})
+        
+        if not user or not verify_password(form_data.password, user["hashed_password"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not user.get("is_active", True):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account is disabled",
+            )
+        
+        access_token_expires = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+        access_token = create_access_token(
+            data={"sub": user["username"]}, expires_delta=access_token_expires
+        )
+        
+        logger.info(f"User logged in: {form_data.username}")
+        return {"access_token": access_token, "token_type": "bearer"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during login: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    """Get current user information"""
     return current_user
 
-# Routes for authentication
-@api_router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    logger.info(f"Login attempt for user: {form_data.username}")
-    
-    user = await authenticate_user(form_data.username, form_data.password)
-    if not user:
-        logger.warning(f"Failed login attempt for user: {form_data.username}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    logger.info(f"Successful login for user: {form_data.username}")
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user["username"]}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-# User Routes
-@api_router.post("/users", response_model=UserResponse)
-async def create_user(user: UserCreate):
-    # Check if username already exists
-    existing_user = await db.users.find_one({"username": user.username})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    
-    # Check if email already exists
-    existing_email = await db.users.find_one({"email": user.email})
-    if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = get_password_hash(user.password)
-    user_dict = user.dict()
-    del user_dict["password"]
-    
-    new_user = User(
-        **user_dict,
-        hashed_password=hashed_password
-    )
-    
-    result = await db.users.insert_one(jsonable_encoder(new_user))
-    created_user = await db.users.find_one({"_id": result.inserted_id})
-    
-    return UserResponse(
-        id=str(created_user["id"]),
-        email=created_user["email"],
-        username=created_user["username"],
-        full_name=created_user["full_name"],
-        role=created_user["role"],
-        created_at=created_user["created_at"]
-    )
-
-@api_router.get("/users/me", response_model=UserResponse)
-async def read_users_me(current_user: dict = Depends(get_current_active_user)):
-    return UserResponse(
-        id=current_user["id"],
-        email=current_user["email"],
-        username=current_user["username"],
-        full_name=current_user["full_name"],
-        role=current_user["role"],
-        created_at=current_user["created_at"]
-    )
-
-@api_router.get("/users", response_model=List[UserResponse])
-async def get_all_users(current_user: dict = Depends(get_current_active_user)):
-    # Only admin and staff can view all users
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.STAFF]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view all users"
-        )
-    
-    users = await db.users.find().to_list(1000)
-    return [
-        UserResponse(
-            id=user["id"],
-            email=user["email"],
-            username=user["username"],
-            full_name=user["full_name"],
-            role=user["role"],
-            created_at=user["created_at"]
-        ) for user in users
-    ]
-
-@api_router.put("/users/{user_id}", response_model=UserResponse)
-async def update_user(
-    user_id: str,
-    user_update: UserUpdate,
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Only admin can update users
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update users"
-        )
-    
-    # Get existing user
-    existing_user = await db.users.find_one({"id": user_id})
-    if not existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Create update dictionary with non-None fields
-    update_data = {k: v for k, v in user_update.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
-    
-    # Update the user
-    await db.users.update_one(
-        {"id": user_id},
-        {"$set": jsonable_encoder(update_data)}
-    )
-    
-    # Return updated user
-    updated_user = await db.users.find_one({"id": user_id})
-    return UserResponse(
-        id=updated_user["id"],
-        email=updated_user["email"],
-        username=updated_user["username"],
-        full_name=updated_user["full_name"],
-        role=updated_user["role"],
-        created_at=updated_user["created_at"]
-    )
-
-# Event Routes
-@api_router.post("/events", response_model=EventResponse)
-async def create_event(event: EventCreate, current_user: dict = Depends(get_current_active_user)):
-    new_event = Event(
-        **event.dict(),
-        created_by=current_user["id"]
-    )
-    
-    # Check for conflicts (overlapping events for participants)
-    for participant_id in new_event.participants:
-        conflicts = await db.events.find({
-            "participants": participant_id,
-            "$or": [
-                {
-                    "start_time": {"$lt": new_event.end_time},
-                    "end_time": {"$gt": new_event.start_time}
-                }
-            ]
-        }).to_list(100)
-        
-        if conflicts:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Event conflicts with existing events for one or more participants"
-            )
-    
-    result = await db.events.insert_one(jsonable_encoder(new_event))
-    created_event = await db.events.find_one({"_id": result.inserted_id})
-    
-    # Create notifications for participants
-    try:
-        notification_count = await create_event_notifications(new_event, NotificationType.EVENT_REMINDER)
-        logger.info(f"Created {notification_count} notifications for event: {new_event.id}")
-    except Exception as e:
-        logger.error(f"Error creating notifications: {str(e)}")
-        logger.error(f"Exception traceback: {traceback.format_exc()}")
-    
-    return EventResponse(**created_event)
-
-@api_router.get("/events", response_model=List[EventResponse])
+# Event endpoints
+@app.get("/api/events", response_model=List[Event])
 async def get_events(
-    current_user: dict = Depends(get_current_active_user),
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    current_user: User = Depends(get_current_user)
 ):
-    query = {}
-    
-    # If date range is provided, filter by date
-    if start_date and end_date:
-        try:
-            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-            query = {
-                "$or": [
-                    {
-                        "start_time": {
-                            "$gte": start,
-                            "$lte": end
-                        }
-                    },
-                    {
-                        "end_time": {
-                            "$gte": start,
-                            "$lte": end
-                        }
-                    }
-                ]
-            }
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"
-            )
-    
-    # Add user filtering - show events where user is creator or participant
-    user_filter = {
-        "$or": [
-            {"created_by": current_user["id"]},
-            {"participants": current_user["id"]}
-        ]
-    }
-    
-    # Combine filters
-    if query:
-        query = {"$and": [query, user_filter]}
-    else:
-        query = user_filter
-    
-    events = await db.events.find(query).to_list(1000)
-    return [EventResponse(**event) for event in events]
+    """Get events for the current user"""
+    try:
+        query = {"created_by": current_user.id}
+        
+        if start_date or end_date:
+            date_query = {}
+            if start_date:
+                date_query["$gte"] = start_date
+            if end_date:
+                date_query["$lte"] = end_date
+            query["start_time"] = date_query
+        
+        cursor = database.events.find(query).sort("start_time", 1)
+        events = []
+        
+        async for event in cursor:
+            events.append(Event(**event, id=event["_id"]))
+        
+        logger.info(f"Retrieved {len(events)} events for user {current_user.username}")
+        return events
+        
+    except Exception as e:
+        logger.error(f"Error retrieving events: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve events")
 
-@api_router.get("/events/{event_id}", response_model=EventResponse)
-async def get_event(event_id: str, current_user: dict = Depends(get_current_active_user)):
-    event = await db.events.find_one({"id": event_id})
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check if user has permission to view the event
-    if event["created_by"] != current_user["id"] and current_user["id"] not in event["participants"]:
-        if current_user["role"] != UserRole.ADMIN:
-            raise HTTPException(status_code=403, detail="Not authorized to view this event")
-    
-    return EventResponse(**event)
-
-@api_router.put("/events/{event_id}", response_model=EventResponse)
-async def update_event(
-    event_id: str, 
-    event_update: EventUpdate, 
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Get existing event
-    existing_event = await db.events.find_one({"id": event_id})
-    if not existing_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check permissions - only admin, creator or staff can update
-    if (
-        existing_event["created_by"] != current_user["id"] 
-        and current_user["role"] != UserRole.ADMIN
-        and current_user["role"] != UserRole.STAFF
-    ):
-        raise HTTPException(status_code=403, detail="Not authorized to update this event")
-    
-    # Create update dictionary with non-None fields
-    update_data = {k: v for k, v in event_update.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
-    
-    # Update the event
-    await db.events.update_one(
-        {"id": event_id},
-        {"$set": jsonable_encoder(update_data)}
-    )
-    
-    # Return updated event
-    updated_event = await db.events.find_one({"id": event_id})
-    return EventResponse(**updated_event)
-
-@api_router.delete("/events/{event_id}")
-async def delete_event(
-    event_id: str, 
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Get existing event
-    existing_event = await db.events.find_one({"id": event_id})
-    if not existing_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check permissions - only admin or creator can delete
-    if (
-        existing_event["created_by"] != current_user["id"] 
-        and current_user["role"] != UserRole.ADMIN
-    ):
-        raise HTTPException(status_code=403, detail="Not authorized to delete this event")
-    
-    # Delete the event
-    await db.events.delete_one({"id": event_id})
-    
-    return {"message": "Event deleted successfully"}
-
-# Notification background task
-async def process_notifications():
-    """Background task to process notifications that are due to be sent"""
-    logger.info("Starting notification processing service")
-    
-    while True:
-        try:
-            # Find notifications that are scheduled and due
-            now = datetime.utcnow()
-            
-            # Log the current time for debugging
-            logger.info(f"Checking for notifications at {now.isoformat()}")
-            
-            # Query for pending notifications
-            query = {
-                "status": NotificationStatus.PENDING,
-                "$or": [
-                    {"scheduled_for": None},  # Send immediately
-                    {"scheduled_for": {"$lte": now}}  # Due to be sent
-                ]
-            }
-            
-            # Log the query
-            logger.info(f"Notification query: {query}")
-            
-            # Find pending notifications
-            pending_notifications = await db.notifications.find(query).to_list(100)
-            
-            # Log the number of pending notifications
-            logger.info(f"Found {len(pending_notifications)} pending notifications")
-            
-            for notification in pending_notifications:
-                # Mark as sent
-                await db.notifications.update_one(
-                    {"id": notification["id"]},
-                    {"$set": {"status": NotificationStatus.SENT}}
-                )
-                
-                logger.info(f"Notification sent: {notification['title']} to user {notification['user_id']}")
-                
-                # In a real system, this would send an email, push notification, etc.
-                # For now, we just log it
-            
-            # Sleep before next check
-            logger.info("Sleeping for 15 seconds before next notification check")
-            await asyncio.sleep(15)  # Check more frequently (15 seconds)
-            
-        except Exception as e:
-            logger.error(f"Error in notification service: {str(e)}")
-            logger.error(f"Exception traceback: {traceback.format_exc()}")
-            await asyncio.sleep(30)  # Retry after 30 seconds
-
-# Start the notification background task
-@app.on_event("startup")
-async def start_notification_service():
-    asyncio.create_task(process_notifications())
-
-# Add endpoints for notifications
-@api_router.post("/notifications", response_model=NotificationResponse)
-async def create_notification(
-    notification: NotificationCreate,
+@app.post("/api/events", response_model=Event)
+async def create_event(
+    event: EventCreate, 
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_user)
 ):
-    # Check if user has permission (admin or creating notification for themselves)
-    if current_user["role"] != UserRole.ADMIN and notification.user_id != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized to create notifications for other users")
-    
-    new_notification = Notification(**notification.dict())
-    
-    result = await db.notifications.insert_one(jsonable_encoder(new_notification))
-    created_notification = await db.notifications.find_one({"_id": result.inserted_id})
-    
-    return NotificationResponse(**created_notification)
-
-@api_router.get("/notifications", response_model=List[NotificationResponse])
-async def get_notifications(current_user: dict = Depends(get_current_active_user)):
-    # Get notifications for the current user
-    notifications = await db.notifications.find({"user_id": current_user["id"]}).sort("created_at", -1).to_list(100)
-    return [NotificationResponse(**notification) for notification in notifications]
-
-@api_router.put("/notifications/{notification_id}/read")
-async def mark_notification_as_read(
-    notification_id: str,
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Find notification
-    notification = await db.notifications.find_one({"id": notification_id})
-    
-    if not notification:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    # Check if user has permission to mark it as read
-    if notification["user_id"] != current_user["id"] and current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Not authorized to update this notification")
-    
-    # Update notification
-    await db.notifications.update_one(
-        {"id": notification_id},
-        {"$set": {
-            "status": NotificationStatus.READ,
-            "read_at": datetime.utcnow()
-        }}
-    )
-    
-    return {"message": "Notification marked as read"}
-
-# Helper function to create event notifications
-async def create_event_notifications(event, event_type=NotificationType.EVENT_REMINDER):
-    """Create notifications for all participants of an event"""
-    
-    # Get all participants
-    participant_ids = event.participants
-    
-    # Add event creator as well
-    if event.created_by not in participant_ids:
-        participant_ids.append(event.created_by)
-    
-    # Create appropriate message based on event type
-    if event_type == NotificationType.EVENT_REMINDER:
-        title = f"Reminder: {event.title}"
-        message = f"You have an upcoming event: {event.title} on {event.start_time.strftime('%Y-%m-%d at %H:%M')}"
-    elif event_type == NotificationType.EVENT_UPDATE:
-        title = f"Event Updated: {event.title}"
-        message = f"An event you are part of has been updated: {event.title} on {event.start_time.strftime('%Y-%m-%d at %H:%M')}"
-    elif event_type == NotificationType.EVENT_CANCELLATION:
-        title = f"Event Cancelled: {event.title}"
-        message = f"An event you are part of has been cancelled: {event.title} that was scheduled for {event.start_time.strftime('%Y-%m-%d at %H:%M')}"
-    
-    # Create notifications for each participant
-    notifications_created = 0
-    for user_id in participant_ids:
-        # For event reminders, create one scheduled for 24 hours before the event
-        # and another one for immediate display
+    """Create a new event"""
+    try:
+        # Validate event times
+        if event.start_time >= event.end_time:
+            raise HTTPException(status_code=400, detail="End time must be after start time")
         
-        # First, create an immediate notification to show in the UI now
-        immediate_notification = Notification(
-            user_id=user_id,
-            title=f"New Event: {event.title}",
-            message=f"A new event has been added to your schedule: {event.title} on {event.start_time.strftime('%Y-%m-%d at %H:%M')}",
-            type=event_type,
-            reference_id=event.id,
-            scheduled_for=None  # Send immediately
-        )
-        
-        await db.notifications.insert_one(jsonable_encoder(immediate_notification))
-        notifications_created += 1
-        
-        # For reminders, also create a scheduled notification for 24 hours before
-        if event_type == NotificationType.EVENT_REMINDER:
-            scheduled_for = event.start_time - timedelta(hours=24)
-            
-            # Only create scheduled notification if it's in the future
-            if scheduled_for > datetime.utcnow():
-                scheduled_notification = Notification(
-                    user_id=user_id,
-                    title=title,
-                    message=message,
-                    type=event_type,
-                    reference_id=event.id,
-                    scheduled_for=scheduled_for
-                )
-                
-                await db.notifications.insert_one(jsonable_encoder(scheduled_notification))
-                notifications_created += 1
-    
-    logger.info(f"Created {notifications_created} notifications for event ID: {event.id}")
-    return notifications_created
-
-# Update event creation to include notifications
-@api_router.post("/events", response_model=EventResponse)
-async def create_event(event: EventCreate, current_user: dict = Depends(get_current_active_user)):
-    new_event = Event(
-        **event.dict(),
-        created_by=current_user["id"]
-    )
-    
-    # Check for conflicts (overlapping events for participants)
-    for participant_id in new_event.participants:
-        conflicts = await db.events.find({
-            "participants": participant_id,
+        # Check for conflicts
+        conflict = await database.events.find_one({
+            "created_by": current_user.id,
             "$or": [
                 {
-                    "start_time": {"$lt": new_event.end_time},
-                    "end_time": {"$gt": new_event.start_time}
+                    "start_time": {"$lt": event.end_time},
+                    "end_time": {"$gt": event.start_time}
                 }
             ]
-        }).to_list(100)
+        })
         
-        if conflicts:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Event conflicts with existing events for one or more participants"
-            )
-    
-    result = await db.events.insert_one(jsonable_encoder(new_event))
-    created_event = await db.events.find_one({"_id": result.inserted_id})
-    
-    # Create notifications for participants
-    await create_event_notifications(new_event, NotificationType.EVENT_REMINDER)
-    
-    return EventResponse(**created_event)
-
-# Update the event update endpoint to create notifications
-@api_router.put("/events/{event_id}", response_model=EventResponse)
-async def update_event(
-    event_id: str, 
-    event_update: EventUpdate, 
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Get existing event
-    existing_event = await db.events.find_one({"id": event_id})
-    if not existing_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check permissions - only admin, creator or staff can update
-    if (
-        existing_event["created_by"] != current_user["id"] 
-        and current_user["role"] != UserRole.ADMIN
-        and current_user["role"] != UserRole.STAFF
-    ):
-        raise HTTPException(status_code=403, detail="Not authorized to update this event")
-    
-    # Create update dictionary with non-None fields
-    update_data = {k: v for k, v in event_update.dict().items() if v is not None}
-    update_data["updated_at"] = datetime.utcnow()
-    
-    # Update the event
-    await db.events.update_one(
-        {"id": event_id},
-        {"$set": jsonable_encoder(update_data)}
-    )
-    
-    # Get updated event
-    updated_event = await db.events.find_one({"id": event_id})
-    event_obj = Event(**updated_event)
-    
-    # Create notifications for event update
-    await create_event_notifications(event_obj, NotificationType.EVENT_UPDATE)
-    
-    return EventResponse(**updated_event)
-
-# Update the event delete endpoint to create notifications
-@api_router.delete("/events/{event_id}")
-async def delete_event(
-    event_id: str, 
-    current_user: dict = Depends(get_current_active_user)
-):
-    # Get existing event
-    existing_event = await db.events.find_one({"id": event_id})
-    if not existing_event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check permissions - only admin or creator can delete
-    if (
-        existing_event["created_by"] != current_user["id"] 
-        and current_user["role"] != UserRole.ADMIN
-    ):
-        raise HTTPException(status_code=403, detail="Not authorized to delete this event")
-    
-    # Create notifications for event cancellation
-    event_obj = Event(**existing_event)
-    await create_event_notifications(event_obj, NotificationType.EVENT_CANCELLATION)
-    
-    # Delete the event
-    await db.events.delete_one({"id": event_id})
-    
-    return {"message": "Event deleted successfully"}
-
-@api_router.get("/debug/user/{username}")
-async def debug_user(username: str):
-    """Debug endpoint to check user information"""
-    user = await get_user_by_username(username)
-    if not user:
-        return {"message": f"User {username} not found"}
-    
-    # Don't return the hashed password for security
-    return {
-        "username": user["username"],
-        "email": user["email"],
-        "role": user["role"],
-        "id": user["id"],
-        "password_hash_length": len(user["hashed_password"]) if "hashed_password" in user else 0,
-        "created_at": user["created_at"]
-    }
-
-@api_router.get("/debug/notifications")
-async def debug_notifications(current_user: dict = Depends(get_current_active_user)):
-    """Debug endpoint to check notification status"""
-    # Count notifications by type
-    notification_stats = {}
-    
-    # Get all notifications
-    all_notifications = await db.notifications.find().to_list(1000)
-    
-    # Count by type
-    for notification in all_notifications:
-        notification_type = notification.get("type", "unknown")
-        notification_stats[notification_type] = notification_stats.get(notification_type, 0) + 1
-    
-    # Count by status
-    status_stats = {}
-    for notification in all_notifications:
-        status = notification.get("status", "unknown")
-        status_stats[status] = status_stats.get(status, 0) + 1
-    
-    # Count by user
-    user_stats = {}
-    for notification in all_notifications:
-        user_id = notification.get("user_id", "unknown")
-        user_stats[user_id] = user_stats.get(user_id, 0) + 1
-    
-    return {
-        "total_notifications": len(all_notifications),
-        "by_type": notification_stats,
-        "by_status": status_stats,
-        "by_user": user_stats,
-        "notifications_for_current_user": sum(1 for n in all_notifications if n.get("user_id") == current_user["id"]),
-        "last_5_notifications": [
-            {
-                "id": n["id"],
-                "title": n["title"],
-                "user_id": n["user_id"],
-                "status": n["status"],
-                "created_at": n["created_at"],
-            } for n in all_notifications[:5]
-        ] if all_notifications else []
-    }
-
-@api_router.get("/debug/events")
-async def debug_events():
-    """Debug endpoint to check events in the database"""
-    # Get all events
-    all_events = await db.events.find().to_list(1000)
-    
-    return {
-        "total_events": len(all_events),
-        "event_sample": [
-            {
-                "id": event["id"],
-                "title": event["title"],
-                "created_by": event["created_by"],
-                "start_time": event["start_time"],
-                "end_time": event["end_time"]
-            } for event in all_events[:5]
-        ] if all_events else []
-    }
-
-@api_router.post("/debug/create-test-event")
-async def create_test_event():
-    """Create a test event for debugging purposes"""
-    # Find the test user
-    test_user = await get_user_by_username("testuser")
-    if not test_user:
-        return {"message": "Test user not found. Please create a test user first."}
-    
-    # Create a test event
-    now = datetime.utcnow()
-    start_time = now + timedelta(hours=1)
-    end_time = now + timedelta(hours=2)
-    
-    new_event = Event(
-        title="Test Event",
-        description="This is a test event created for debugging purposes",
-        start_time=start_time,
-        end_time=end_time,
-        venue="Test Venue",
-        priority=PriorityLevel.HIGH,
-        recurrence=RecurrenceType.NONE,
-        created_by=test_user["id"],
-        participants=[]
-    )
-    
-    result = await db.events.insert_one(jsonable_encoder(new_event))
-    created_event = await db.events.find_one({"_id": result.inserted_id})
-    
-    return {
-        "message": "Test event created successfully",
-        "event_id": created_event["id"],
-        "title": created_event["title"],
-        "start_time": created_event["start_time"],
-        "end_time": created_event["end_time"],
-        "created_by": created_event["created_by"]
-    }
-
-@api_router.post("/debug/create-test-user")
-async def create_test_user():
-    """Create a test user for debugging purposes"""
-    # Check if the test user already exists
-    test_username = "testuser"
-    existing_user = await get_user_by_username(test_username)
-    
-    if existing_user:
-        return {
-            "message": "Test user already exists",
-            "username": test_username,
-            "password": "password123"
+        if conflict:
+            logger.warning(f"Event conflict detected for user {current_user.username}")
+        
+        event_data = {
+            "_id": str(uuid.uuid4()),
+            **event.dict(),
+            "created_by": current_user.id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
         }
+        
+        await database.events.insert_one(event_data)
+        
+        # Create notification
+        background_tasks.add_task(
+            create_notification,
+            current_user.id,
+            "Event Created",
+            f"Your event '{event.title}' has been created successfully.",
+            "event_created",
+            event_data["_id"]
+        )
+        
+        logger.info(f"Event created by {current_user.username}: {event.title}")
+        return Event(**event_data, id=event_data["_id"])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating event: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create event")
+
+@app.get("/api/events/{event_id}", response_model=Event)
+async def get_event(event_id: str, current_user: User = Depends(get_current_user)):
+    """Get a specific event"""
+    try:
+        event = await database.events.find_one({
+            "_id": event_id,
+            "created_by": current_user.id
+        })
+        
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        return Event(**event, id=event["_id"])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving event: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve event")
+
+@app.put("/api/events/{event_id}", response_model=Event)
+async def update_event(
+    event_id: str,
+    event_update: EventUpdate,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """Update an event"""
+    try:
+        # Check if event exists and belongs to user
+        existing_event = await database.events.find_one({
+            "_id": event_id,
+            "created_by": current_user.id
+        })
+        
+        if not existing_event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        # Validate times if provided
+        update_data = {k: v for k, v in event_update.dict().items() if v is not None}
+        
+        if "start_time" in update_data or "end_time" in update_data:
+            start_time = update_data.get("start_time", existing_event["start_time"])
+            end_time = update_data.get("end_time", existing_event["end_time"])
+            
+            if start_time >= end_time:
+                raise HTTPException(status_code=400, detail="End time must be after start time")
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        await database.events.update_one(
+            {"_id": event_id},
+            {"$set": update_data}
+        )
+        
+        # Get updated event
+        updated_event = await database.events.find_one({"_id": event_id})
+        
+        # Create notification
+        background_tasks.add_task(
+            create_notification,
+            current_user.id,
+            "Event Updated",
+            f"Your event '{updated_event['title']}' has been updated.",
+            "event_updated",
+            event_id
+        )
+        
+        logger.info(f"Event updated by {current_user.username}: {event_id}")
+        return Event(**updated_event, id=updated_event["_id"])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating event: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update event")
+
+@app.delete("/api/events/{event_id}")
+async def delete_event(
+    event_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete an event"""
+    try:
+        # Check if event exists and belongs to user
+        event = await database.events.find_one({
+            "_id": event_id,
+            "created_by": current_user.id
+        })
+        
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        await database.events.delete_one({"_id": event_id})
+        
+        # Create notification
+        background_tasks.add_task(
+            create_notification,
+            current_user.id,
+            "Event Deleted",
+            f"Your event '{event['title']}' has been deleted.",
+            "event_deleted"
+        )
+        
+        logger.info(f"Event deleted by {current_user.username}: {event_id}")
+        return {"message": "Event deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting event: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete event")
+
+# Notification endpoints
+@app.get("/api/notifications", response_model=List[Notification])
+async def get_notifications(current_user: User = Depends(get_current_user)):
+    """Get notifications for the current user"""
+    try:
+        cursor = database.notifications.find(
+            {"user_id": current_user.id}
+        ).sort("created_at", -1).limit(50)  # Limit to 50 most recent
+        
+        notifications = []
+        async for notification in cursor:
+            notifications.append(Notification(**notification, id=notification["_id"]))
+        
+        return notifications
+        
+    except Exception as e:
+        logger.error(f"Error retrieving notifications: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve notifications")
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a notification as read"""
+    try:
+        result = await database.notifications.update_one(
+            {
+                "_id": notification_id,
+                "user_id": current_user.id
+            },
+            {
+                "$set": {
+                    "status": "read",
+                    "read_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        
+        return {"message": "Notification marked as read"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking notification as read: {e}")
+        raise HTTPException(status_code=500, detail="Failed to mark notification as read")
+
+# Debug endpoints (for development)
+if os.getenv("DEBUG", "false").lower() == "true":
+    @app.get("/api/debug/users")
+    async def debug_get_users():
+        """Debug endpoint to list all users"""
+        cursor = database.users.find({})
+        users = []
+        async for user in cursor:
+            users.append({
+                "id": user["_id"],
+                "username": user["username"],
+                "email": user["email"],
+                "role": user["role"]
+            })
+        return users
     
-    # Create a new test user
-    hashed_password = get_password_hash("password123")
-    new_user = User(
-        username=test_username,
-        email="testuser@example.com",
-        hashed_password=hashed_password,
-        full_name="Test User",
-        role=UserRole.ADMIN
+    @app.get("/api/debug/events")
+    async def debug_get_events():
+        """Debug endpoint to list all events"""
+        cursor = database.events.find({})
+        events = []
+        async for event in cursor:
+            events.append({
+                "id": event["_id"],
+                "title": event["title"],
+                "created_by": event["created_by"]
+            })
+        return events
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",
+        port=8001,
+        reload=True,
+        log_level="info"
     )
-    
-    result = await db.users.insert_one(jsonable_encoder(new_user))
-    
-    return {
-        "message": "Test user created successfully",
-        "username": test_username,
-        "password": "password123"
-    }
-
-@api_router.get("/")
-async def root():
-    return {"message": "Hello from the Itinerary Management System API"}
-
-# Include the router in the main app
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()

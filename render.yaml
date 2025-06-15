@@ -1,8 +1,40 @@
-# Render.com Backend Deployment
-buildCommand = "pip install -r requirements.txt"
-startCommand = "uvicorn server:app --host 0.0.0.0 --port $PORT"
+services:
+  # Backend Service
+  - type: web
+    name: itinerary-backend
+    env: python
+    buildCommand: |
+      cd backend && 
+      pip install --upgrade pip && 
+      pip install -r requirements.txt
+    startCommand: |
+      cd backend && 
+      uvicorn server:app --host 0.0.0.0 --port $PORT --workers 2
+    envVars:
+      - key: MONGO_URL
+        value: your-mongodb-atlas-connection-string
+      - key: DB_NAME
+        value: itinerary_management
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+    healthCheckPath: /api/health
+    
+  # Optional: Static Site for Frontend (if not using Vercel)
+  - type: static
+    name: itinerary-frontend
+    buildCommand: |
+      cd frontend && 
+      yarn install && 
+      yarn build
+    staticPublishPath: ./frontend/build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        value: https://your-backend-service-name.onrender.com
 
-# Environment Variables to set in Render dashboard:
-# MONGO_URL=your-mongodb-atlas-connection-string
-# DB_NAME=itinerary_management
-# SECRET_KEY=your-secure-secret-key
+# Database (if using Render's PostgreSQL - optional)
+# databases:
+#   - name: itinerary-postgres
+#     databaseName: itinerary_management
+#     user: itinerary_user

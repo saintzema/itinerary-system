@@ -7,8 +7,9 @@
     "dev": "./start-dev.sh",
     "dev:stop": "./stop-dev.sh",
     "setup": "./deploy-local.sh",
-    "deploy:vercel": "./deploy-vercel.sh",
+    "deploy:vercel": "./deploy-vercel-frontend.sh",
     "deploy:render": "./deploy-render.sh",
+    "deploy:fix": "./fix-vercel-deployment.sh",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -17,7 +18,10 @@
     "test:frontend": "cd frontend && yarn test",
     "lint:frontend": "cd frontend && yarn lint",
     "build:frontend": "cd frontend && yarn build",
-    "build:backend": "cd backend && pip install -r requirements.txt"
+    "build:backend": "cd backend && pip install -r requirements.txt",
+    "local": "./deploy-local.sh",
+    "start": "./deploy-local.sh",
+    "fix": "./fix-vercel-deployment.sh"
   },
   "repository": {
     "type": "git",
@@ -31,7 +35,10 @@
     "fastapi",
     "react",
     "mongodb",
-    "notifications"
+    "notifications",
+    "vercel",
+    "render",
+    "deployment"
   ],
   "author": "Your Name",
   "license": "MIT",

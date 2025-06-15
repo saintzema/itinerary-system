@@ -133,13 +133,13 @@ class Event(EventBase):
 class NotificationBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     message: str = Field(..., min_length=1, max_length=500)
-    type: str = Field(..., regex="^(event_created|event_updated|event_deleted|event_reminder)$")
+    type: str = Field(..., pattern="^(event_created|event_updated|event_deleted|event_reminder)$")
     reference_id: Optional[str] = None
 
 class Notification(NotificationBase):
     id: str
     user_id: str
-    status: str = Field(default="unread", regex="^(read|unread)$")
+    status: str = Field(default="unread", pattern="^(read|unread)$")
     created_at: datetime
     read_at: Optional[datetime] = None
 

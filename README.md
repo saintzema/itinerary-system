@@ -1,462 +1,182 @@
-# Itinerary Management System
+# 🗓️ Itinerary Management System
 
-A comprehensive event scheduling and management system built with FastAPI (backend) and React (frontend).
+> A comprehensive event scheduling and management system built with FastAPI (backend) and React (frontend), featuring real-time notifications, calendar views, and seamless user experience.
+
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/itinerary-management-system)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
+[![Node.js](https://img.shields.io/badge/node.js-16+-green.svg)](https://nodejs.org)
+[![React](https://img.shields.io/badge/react-19.0-blue.svg)](https://reactjs.org)
+[![FastAPI](https://img.shields.io/badge/fastapi-0.110+-green.svg)](https://fastapi.tiangolo.com)
 
 ## ✨ Features
 
-### 🔐 **Authentication System**
-- User registration and login
-- JWT-based authentication
-- Role-based access control (Admin, Staff, User)
-- Protected routes and secure API endpoints
+### 🔐 **Authentication & Security**
+- **Secure JWT Authentication** - Token-based authentication with automatic refresh
+- **Role-based Access Control** - Admin, Staff, and User roles with different permissions
+- **Protected Routes** - Secure API endpoints and frontend route protection
+- **Password Security** - Bcrypt password hashing and validation
 
 ### 📅 **Event Management**
-- Create, edit, and delete events
-- Event scheduling with conflict detection
-- Priority levels (High, Medium, Low)
-- Recurring events support
-- Venue and participant management
+- **Full CRUD Operations** - Create, read, update, and delete events
+- **Smart Calendar View** - Interactive monthly calendar with event display
+- **Priority System** - Color-coded priority levels (High, Medium, Low)
+- **Recurring Events** - Support for daily, weekly, and monthly recurrence
+- **Conflict Detection** - Automatic detection of scheduling conflicts
+- **Venue Management** - Location tracking for events
 
 ### 🔔 **Advanced Notifications**
-- **Real-time sound alerts** when events are about to start (5 minutes before)
-- **Browser push notifications** for upcoming events
-- **In-app notification system** with bell icon
-- Notification history and read/unread status
+- **Real-time Sound Alerts** - Audio notifications 5 minutes before events start
+- **Browser Push Notifications** - Native browser notifications for upcoming events
+- **In-app Notification Center** - Bell icon with unread count and notification history
+- **Background Monitoring** - Continuous event time monitoring with cleanup
 
 ### 🎨 **Modern UI/UX**
-- Responsive design with Tailwind CSS
-- Interactive event cards and modals
-- Calendar view (coming soon)
-- Dashboard with event overview
-- Clean, professional interface
+- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- **Tailwind CSS** - Modern, utility-first styling with custom components
+- **Interactive Components** - Modal dialogs, dropdown menus, and form validation
+- **Loading States** - Smooth loading indicators and error boundaries
+- **Accessibility** - Screen reader friendly with proper ARIA labels
 
-### 📊 **Additional Features**
-- Event reports and analytics (coming soon)
-- User management for admins
-- Real-time updates
-- Mobile-responsive design
+### 🏗️ **Technical Excellence**
+- **Production Ready** - Comprehensive error handling and logging
+- **Performance Optimized** - Database indexing, caching, and code splitting
+- **Docker Support** - Complete containerization with docker-compose
+- **Health Checks** - API health monitoring and status endpoints
+- **Environment Flexibility** - Easy configuration for different environments
 
-## 🚀 Quick Start & Local Deployment
+## 🚀 Quick Start
 
-### Prerequisites
-- **Node.js 16+** and **yarn**
-- **Python 3.11+** 
-- **MongoDB** (local or Atlas)
-
-### 🎯 Option 1: Automated Setup (Recommended)
-
+### Option 1: Automated Setup (Recommended)
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/yourusername/itinerary-management-system.git
 cd itinerary-management-system
 
-# Run automated setup
-chmod +x setup-local.sh
-./setup-local.sh
-
-# Start all services
-chmod +x start-local.sh
-./start-local.sh
+# Run one-command setup
+chmod +x deploy-local.sh
+./deploy-local.sh
 ```
 
-### 🛠️ Option 2: Manual Setup
-
-#### Step 1: Clone Repository
+### Option 2: Manual Setup
 ```bash
-git clone <your-repo-url>
-cd itinerary-management-system
-```
-
-#### Step 2: Backend Setup
-```bash
+# Backend setup
 cd backend
-
-# Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Upgrade pip and install dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
 
-# Create environment file
-cat > .env << EOF
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=itinerary_management
-SECRET_KEY=your-super-secret-key-change-in-production
-EOF
-
-# Test the setup
-python -c "import motor, fastapi, uvicorn; print('✅ Backend setup successful!')"
-```
-
-#### Step 3: Frontend Setup
-```bash
+# Frontend setup  
 cd ../frontend
-
-# Install dependencies
 yarn install
 
-# Create environment file
-cat > .env << EOF
-WDS_SOCKET_PORT=443
-REACT_APP_BACKEND_URL=http://localhost:8001
-EOF
-
-# Test the setup
-yarn --version && echo "✅ Frontend setup successful!"
+# Start services
+npm run dev
 ```
 
-#### Step 4: Database Setup
+## 🌐 Deployment
+
+### Local Development
 ```bash
-# Start MongoDB (choose your platform)
-
-# Ubuntu/Debian:
-sudo systemctl start mongod
-sudo systemctl enable mongod
-
-# macOS:
-brew services start mongodb/brew/mongodb-community
-
-# Windows:
-net start MongoDB
-
-# Test connection
-mongosh --eval "db.adminCommand('ismaster')"
+npm run setup    # Complete local setup
+npm run dev      # Start development servers
+npm run dev:stop # Stop all services
 ```
 
-#### Step 5: Start Services
+### Cloud Deployment
 
-**Option A: Using Scripts (Recommended)**
+#### Deploy to Vercel + Render
 ```bash
-# Start all services
-./start-local.sh
+# Deploy frontend to Vercel
+npm run deploy:vercel
 
-# Or start individually
-./start-local.sh backend   # Backend only
-./start-local.sh frontend  # Frontend only
+# Deploy backend to Render
+npm run deploy:render
 ```
 
-**Option B: Manual Start (3 separate terminals)**
-
-**Terminal 1 - Backend:**
+#### Deploy with Docker
 ```bash
-cd backend
-source venv/bin/activate
-export PYTHONPATH="$PWD:$PYTHONPATH"
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+npm run docker:build  # Build containers
+npm run docker:up     # Start all services
+npm run docker:logs   # View logs
+npm run docker:down   # Stop services
 ```
 
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-yarn start
-```
+## 📋 System Requirements
 
-**Terminal 3 - MongoDB (if not using system service):**
-```bash
-mongod --dbpath /path/to/your/data/directory
-```
+- **Node.js** 16+ and yarn
+- **Python** 3.11+
+- **MongoDB** (local or Atlas)
 
-### 🌐 Access Your Application
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8001
-- **API Documentation**: http://localhost:8001/docs
-
-### 🔧 Troubleshooting Local Setup
-
-#### **"ModuleNotFoundError: No module named 'motor'" Fix:**
-
-```bash
-# Ensure virtual environment is activated
-cd backend
-source venv/bin/activate
-
-# Verify you're in the right environment
-which python
-which pip
-
-# Reinstall dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Test import specifically
-python -c "import motor; print('Motor imported successfully!')"
-
-# If still failing, try:
-pip uninstall motor pymongo
-pip install motor==3.3.1 pymongo==4.6.1
-
-# Set Python path explicitly
-export PYTHONPATH="$PWD:$PYTHONPATH"
-```
-
-#### **Port Already in Use:**
-```bash
-# Find and kill processes
-lsof -ti:8001 | xargs kill -9  # Backend port
-lsof -ti:3000 | xargs kill -9  # Frontend port
-```
-
-#### **MongoDB Connection Issues:**
-```bash
-# Check MongoDB status
-sudo systemctl status mongod
-
-# Check logs
-sudo tail -f /var/log/mongodb/mongod.log
-
-# Test connection manually
-mongosh --eval "db.runCommand({connectionStatus : 1})"
-```
-
-#### **Permission Issues:**
-```bash
-# Fix permissions
-chmod +x setup-local.sh start-local.sh
-chmod -R 755 backend/ frontend/
-sudo chown -R $USER:$USER .
-```
-
-## ☁️ Cloud Deployment
-
-### 🔷 Vercel + Render Deployment (Recommended)
-
-#### Deploy Frontend to Vercel:
-
-1. **Prepare for Vercel:**
-```bash
-# Update vercel.json with your backend URL
-# File is already created at project root
-```
-
-2. **Deploy to Vercel:**
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Login and deploy
-vercel login
-vercel --prod
-
-# Or use Vercel dashboard:
-# 1. Connect GitHub repo
-# 2. Import project
-# 3. Deploy automatically
-```
-
-#### Deploy Backend to Render:
-
-1. **Create Render Account**: Visit [render.com](https://render.com)
-
-2. **Deploy Backend:**
-   - Connect your GitHub repository
-   - Choose "Web Service"
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
-   - **Environment Variables**:
-     ```
-     MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/dbname
-     DB_NAME=itinerary_management
-     SECRET_KEY=your-secure-secret-key-here
-     ```
-
-3. **Update Frontend Environment:**
-```bash
-# Update frontend/.env with your Render backend URL
-REACT_APP_BACKEND_URL=https://your-app-name.onrender.com
-```
-
-### 🔷 Heroku Deployment
-
-#### Backend to Heroku:
-```bash
-# Install Heroku CLI
-# Login to Heroku
-heroku login
-
-# Create app
-heroku create your-app-name
-
-# Set environment variables
-heroku config:set MONGO_URL="your-mongodb-atlas-url"
-heroku config:set DB_NAME="itinerary_management"
-heroku config:set SECRET_KEY="your-secret-key"
-
-# Deploy
-git add .
-git commit -m "Deploy to Heroku"
-git push heroku main
-```
-
-#### Frontend to Heroku:
-```bash
-# Create separate app for frontend
-heroku create your-frontend-app
-
-# Set backend URL
-heroku config:set REACT_APP_BACKEND_URL="https://your-backend-app.herokuapp.com"
-
-# Add buildpack
-heroku buildpacks:set mars/create-react-app
-
-# Deploy
-git subtree push --prefix frontend heroku main
-```
-
-### 🔷 Railway Deployment
-
-1. **Visit [railway.app](https://railway.app)**
-2. **Connect GitHub repository**
-3. **Deploy backend and frontend as separate services**
-4. **Set environment variables in Railway dashboard**
-
-### 🔷 DigitalOcean App Platform
-
-1. **Visit [DigitalOcean Apps](https://cloud.digitalocean.com/apps)**
-2. **Connect GitHub repository**
-3. **Configure build and run commands**
-4. **Set environment variables**
-
-## 🗄️ Database Setup for Cloud Deployment
-
-### MongoDB Atlas (Recommended for Cloud):
-
-1. **Create Account**: Visit [mongodb.com](https://www.mongodb.com/)
-2. **Create Cluster**: Choose shared (free) tier
-3. **Create User**: Add database user with read/write permissions
-4. **Whitelist IP**: Add `0.0.0.0/0` for cloud deployments
-5. **Get Connection String**:
-   ```
-   mongodb+srv://username:password@cluster.mongodb.net/itinerary_management
-   ```
-
-### Environment Variables for Production:
-
-**Backend (.env or cloud platform settings):**
-```env
-MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/
-DB_NAME=itinerary_management
-SECRET_KEY=your-super-secure-secret-key-for-production
-```
-
-**Frontend (.env or cloud platform settings):**
-```env
-REACT_APP_BACKEND_URL=https://your-backend-domain.com
-```
-
-## 🔒 Production Security Checklist
-
-- [ ] Change default SECRET_KEY
-- [ ] Use environment variables for all sensitive data
-- [ ] Enable HTTPS/SSL
-- [ ] Set up proper CORS origins
-- [ ] Use MongoDB Atlas with authentication
-- [ ] Set up proper firewall rules
-- [ ] Enable rate limiting
-- [ ] Regular security updates
-
-## 📊 Quick Deployment Commands Summary
-
-```bash
-# Local Development
-./setup-local.sh && ./start-local.sh
-
-# Vercel Frontend
-vercel --prod
-
-# Render Backend
-# Use dashboard with:
-# Build: pip install -r requirements.txt
-# Start: uvicorn server:app --host 0.0.0.0 --port $PORT
-
-# Heroku Full Stack
-heroku create app-backend && heroku create app-frontend
-git push heroku main
-```
-
-## 🎯 Post-Deployment Testing
-
-1. **Test Registration**: Create a new account
-2. **Test Login**: Sign in with credentials
-3. **Test Events**: Create, edit, delete events
-4. **Test Notifications**: Verify sound alerts work
-5. **Test Mobile**: Check responsive design
-
-**Your application is now ready for local development and cloud deployment! 🚀**
-
-## 📁 Project Structure
+## 🏗️ Architecture
 
 ```
-itinerary-management-system/
-├── backend/
-│   ├── server.py          # FastAPI application
-│   ├── requirements.txt   # Python dependencies
-│   └── .env              # Environment variables
-├── frontend/
-│   ├── src/
-│   │   ├── App.js        # Main React component
-│   │   ├── App.css       # Styles
-│   │   └── index.js      # Entry point
-│   ├── package.json      # Node.js dependencies
-│   └── .env              # Environment variables
-└── README.md
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│                 │    │                 │    │                 │
+│   React Frontend│────│   FastAPI       │────│   MongoDB       │
+│   (Port 3000)   │    │   Backend       │    │   Database      │
+│                 │    │   (Port 8001)   │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## 🔧 Technology Stack
+### Tech Stack
 
-### Backend
-- **FastAPI**: Modern Python web framework
-- **MongoDB**: NoSQL database with Motor driver
-- **JWT**: JSON Web Tokens for authentication
-- **Pydantic**: Data validation and serialization
-- **Uvicorn**: ASGI server
+**Frontend:**
+- React 19 with modern hooks and context
+- Tailwind CSS for styling
+- Axios for API communication
+- React Router for navigation
+- Web APIs for notifications and audio
 
-### Frontend
-- **React 19**: Modern React with hooks
-- **Tailwind CSS**: Utility-first CSS framework
-- **Axios**: HTTP client for API calls
-- **React Router**: Client-side routing
-- **Web APIs**: Notifications and Audio APIs
+**Backend:**
+- FastAPI with async/await support
+- MongoDB with Motor async driver
+- JWT authentication with jose
+- Password hashing with passlib
+- Background tasks for notifications
 
-## 🎯 Usage
+**DevOps:**
+- Docker and docker-compose
+- Nginx reverse proxy
+- Health checks and monitoring
+- Environment-based configuration
 
-### Creating Your First Event
+## 🎯 Usage Guide
 
-1. **Register/Login**: Create an account or sign in
-2. **Navigate to Dashboard**: View your events overview
-3. **Create Event**: Click "Create New Event" button
-4. **Fill Details**: Add title, description, time, venue, priority
-5. **Save**: Event will appear in your dashboard
-6. **Get Notified**: Receive sound alerts 5 minutes before event starts
+### Getting Started
+1. **Register Account** - Create your user account
+2. **Login** - Sign in with your credentials
+3. **Create Events** - Add your first event with details
+4. **View Calendar** - Navigate the monthly calendar view
+5. **Get Notified** - Receive alerts before events start
 
-### Managing Notifications
+### Key Features
 
-- **Bell Icon**: Click to view all notifications
-- **Event Alerts**: Automatic notifications for upcoming events
-- **Browser Permissions**: Allow notifications for best experience
-- **Sound Alerts**: Automatic audio notifications for imminent events
+#### Dashboard
+- View upcoming events in card format
+- Quick access to event details
+- Create new events with one click
+- Edit or delete existing events
 
-## 🔐 API Endpoints
+#### Calendar View
+- Monthly calendar with event display
+- Color-coded events by priority
+- Navigate between months easily
+- Click events for detailed view
 
-### Authentication
-- `POST /api/token` - User login
-- `POST /api/users` - User registration
-- `GET /api/users/me` - Get current user
+#### Event Management
+- Comprehensive event creation form
+- Set priority levels and recurrence
+- Add venue and participant information
+- Automatic conflict detection
 
-### Events
-- `GET /api/events` - List user events
-- `POST /api/events` - Create new event
-- `GET /api/events/{id}` - Get event details
-- `PUT /api/events/{id}` - Update event
-- `DELETE /api/events/{id}` - Delete event
+#### Notifications
+- Real-time sound alerts
+- Browser push notifications
+- In-app notification center
+- Mark notifications as read
 
-### Notifications
-- `GET /api/notifications` - Get user notifications
-- `PUT /api/notifications/{id}/read` - Mark as read
-
-## 🛠️ Development
+## 🔧 Configuration
 
 ### Environment Variables
 
@@ -464,75 +184,97 @@ itinerary-management-system/
 ```env
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=itinerary_management
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=your-super-secret-key-here
+DEBUG=false
 ```
 
 **Frontend (.env)**
 ```env
 REACT_APP_BACKEND_URL=http://localhost:8001
+GENERATE_SOURCEMAP=false
 ```
 
-### Running Tests
-
-```bash
-# Backend tests
-cd backend
-python -m pytest
-
-# Frontend tests
-cd frontend
-yarn test
-```
-
-## 🚀 Deployment
-
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions including:
-
-- Docker deployment
-- Cloud platforms (Heroku, Railway, Vercel)
-- VPS deployment
-- SSL setup
-- Production optimization
+### Production Configuration
+See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for complete production deployment guidelines.
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Database Connection Error**
-   - Ensure MongoDB is running
-   - Check MONGO_URL in backend/.env
+#### "ModuleNotFoundError: No module named 'motor'"
+```bash
+cd backend
+source venv/bin/activate
+pip install --force-reinstall motor pymongo
+```
 
-2. **CORS Errors**
-   - Verify REACT_APP_BACKEND_URL matches backend URL
-   - Check backend CORS configuration
+#### Frontend Build Errors
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+yarn install
+yarn build
+```
 
-3. **Notification Permissions**
-   - Allow browser notifications when prompted
-   - Check browser notification settings
+#### Database Connection Issues
+```bash
+# Check MongoDB status
+sudo systemctl status mongod
 
-4. **Sound Not Playing**
-   - Ensure browser allows audio autoplay
-   - Check if user has interacted with the page first
+# Restart MongoDB
+sudo systemctl restart mongod
+
+# Test connection
+mongosh --eval "db.adminCommand('ismaster')"
+```
+
+### Getting Help
+- Check the [troubleshooting guide](docs/TROUBLESHOOTING.md)
+- Review application logs
+- Verify environment variables
+- Test API endpoints manually
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm run test:backend
+npm run test:frontend
+
+# Run specific tests
+cd backend && python -m pytest tests/
+cd frontend && yarn test --coverage
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🎉 Acknowledgments
+## 🙏 Acknowledgments
 
-- FastAPI for the excellent Python web framework
-- React team for the robust frontend library
-- MongoDB for the flexible database solution
-- Tailwind CSS for the utility-first styling
+- **FastAPI** - For the excellent Python web framework
+- **React** - For the robust frontend library
+- **MongoDB** - For the flexible database solution
+- **Tailwind CSS** - For the utility-first styling approach
+- **Vercel** - For seamless frontend deployment
+- **Render** - For reliable backend hosting
+
+## 📞 Support
+
+- **Documentation**: [Full documentation](docs/)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/itinerary-management-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/itinerary-management-system/discussions)
 
 ---
 
 **Built with ❤️ for efficient event management**
+
+⭐ **Star this repository if it helped you!**

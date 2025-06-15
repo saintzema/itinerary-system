@@ -1,0 +1,46 @@
+{
+  "name": "itinerary-management-system",
+  "version": "1.0.0",
+  "description": "A comprehensive event scheduling and management system built with FastAPI and React",
+  "main": "index.js",
+  "scripts": {
+    "dev": "./start-dev.sh",
+    "dev:stop": "./stop-dev.sh",
+    "setup": "./deploy-local.sh",
+    "deploy:vercel": "./deploy-vercel.sh",
+    "deploy:render": "./deploy-render.sh",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "test:backend": "cd backend && python -m pytest",
+    "test:frontend": "cd frontend && yarn test",
+    "lint:frontend": "cd frontend && yarn lint",
+    "build:frontend": "cd frontend && yarn build",
+    "build:backend": "cd backend && pip install -r requirements.txt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/itinerary-management-system.git"
+  },
+  "keywords": [
+    "itinerary",
+    "event-management",
+    "scheduling",
+    "calendar",
+    "fastapi",
+    "react",
+    "mongodb",
+    "notifications"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/itinerary-management-system/issues"
+  },
+  "homepage": "https://github.com/yourusername/itinerary-management-system#readme",
+  "engines": {
+    "node": ">=16.0.0",
+    "python": ">=3.11.0"
+  }
+}

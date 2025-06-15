@@ -1,0 +1,8 @@
+# Render.com Backend Deployment
+buildCommand = "pip install -r requirements.txt"
+startCommand = "uvicorn server:app --host 0.0.0.0 --port $PORT"
+
+# Environment Variables to set in Render dashboard:
+# MONGO_URL=your-mongodb-atlas-connection-string
+# DB_NAME=itinerary_management
+# SECRET_KEY=your-secure-secret-key

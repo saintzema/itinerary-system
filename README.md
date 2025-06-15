@@ -220,6 +220,24 @@ See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for complete production d
 
 ### Common Issues
 
+#### 🚨 **Vercel Error: "cd: frontend: No such file found"**
+This happens when Vercel tries to build from root directory but frontend is in subdirectory.
+
+**Solution 1: Use Fixed Script**
+```bash
+./fix-vercel-deployment.sh
+```
+
+**Solution 2: Manual Fix**
+1. Vercel Dashboard → Project → Settings → General
+2. Change "Root Directory" from `./` to `frontend`
+3. Redeploy
+
+**Solution 3: Use Frontend-Only Deployment**
+```bash
+./deploy-vercel-frontend.sh
+```
+
 #### "ModuleNotFoundError: No module named 'motor'"
 ```bash
 cd backend

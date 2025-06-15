@@ -616,10 +616,10 @@ if os.getenv("DEBUG", "false").lower() == "true":
 
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.environ.get("PORT", 8000))  # use PORT if set, fallback to 8000
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=8001,
-        reload=True,
+        port=port,
         log_level="info"
     )

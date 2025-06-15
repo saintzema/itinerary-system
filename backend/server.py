@@ -111,8 +111,8 @@ class EventBase(BaseModel):
     start_time: datetime
     end_time: datetime
     venue: Optional[str] = Field(None, max_length=200)
-    priority: str = Field(default="medium", regex="^(low|medium|high)$")
-    recurrence: str = Field(default="none", regex="^(none|daily|weekly|monthly)$")
+    priority: str = Field(default="medium", pattern="^(low|medium|high)$")
+    recurrence: str = Field(default="none", pattern="^(none|daily|weekly|monthly)$")
     recurrence_end_date: Optional[datetime] = None
     participants: List[str] = Field(default_factory=list)
 

@@ -611,9 +611,13 @@ function Login() {
       
       if (error.response && error.response.data) {
         if (error.response.data.detail) {
-          setError(error.response.data.detail);
+          if (typeof error.response.data.detail === 'object') {
+            setError("Login failed. Please check your credentials and try again.");
+          } else {
+            setError(error.response.data.detail);
+          }
         } else {
-          setError(JSON.stringify(error.response.data));
+          setError("Login failed. Please check your credentials and try again.");
         }
       } else {
         setError("Login failed. Please check your credentials and try again.");

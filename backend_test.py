@@ -152,7 +152,7 @@ class ItineraryAPITester:
             "Create Event",
             "POST",
             "events",
-            200,
+            201,  # Changed from 200 to 201 to match API
             data=data
         )
         

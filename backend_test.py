@@ -328,8 +328,10 @@ def main():
     tester = ItineraryAPITester(backend_url)
     
     # Try to create a test user first
-    print("\n🔍 Attempting to create test user first...")
-    tester.test_register()
+    print("\n🔍 Creating test user...")
+    if not tester.test_register():
+        print("❌ User registration failed, stopping tests")
+        return 1
     
     return tester.run_all_tests()
 

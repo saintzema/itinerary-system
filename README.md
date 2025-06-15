@@ -85,13 +85,32 @@ npm run dev:stop # Stop all services
 
 ### Cloud Deployment
 
-#### Deploy to Vercel + Render
-```bash
-# Deploy frontend to Vercel
-npm run deploy:vercel
+### 🚨 **VERCEL DEPLOYMENT FIX**
 
-# Deploy backend to Render
-npm run deploy:render
+**If you get the error: `sh: line 1: cd: frontend: No such file found`**
+
+**Quick Fix:**
+```bash
+# Use the deployment fix script
+./fix-vercel-deployment.sh
+
+# Or use the corrected frontend deployment
+./deploy-vercel-frontend.sh
+```
+
+**Manual Fix in Vercel Dashboard:**
+1. Go to vercel.com → Your Project → Settings → General
+2. **⚠️ Change "Root Directory" from `./` to `frontend`**
+3. Go to Deployments → Click "Redeploy" on latest deployment
+
+#### Deploy to Vercel + Render (Recommended)
+```bash
+# Step 1: Deploy backend to Render (via dashboard)
+# Step 2: Deploy frontend to Vercel (fixed script)
+./deploy-vercel-frontend.sh
+
+# Or use the automated fix
+./fix-vercel-deployment.sh
 ```
 
 #### Deploy with Docker

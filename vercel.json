@@ -23,12 +23,5 @@
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
-  ],
-  "env": {
-    "REACT_APP_BACKEND_URL": "https://your-backend-domain.onrender.com",
-    "GENERATE_SOURCEMAP": "false"
-  },
-  "buildCommand": "cd frontend && yarn build",
-  "outputDirectory": "frontend/build",
-  "installCommand": "cd frontend && yarn install"
+  ]
 }

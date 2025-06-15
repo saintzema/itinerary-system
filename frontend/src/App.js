@@ -738,9 +738,13 @@ function Register() {
       
       if (error.response && error.response.data) {
         if (error.response.data.detail) {
-          setError(error.response.data.detail);
+          if (typeof error.response.data.detail === 'object') {
+            setError("Registration failed. Please try again with a different username or email.");
+          } else {
+            setError(error.response.data.detail);
+          }
         } else {
-          setError(JSON.stringify(error.response.data));
+          setError("Registration failed. Please try again with a different username or email.");
         }
       } else {
         setError("Registration failed. Please try again with a different username or email.");

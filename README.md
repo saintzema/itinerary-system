@@ -36,147 +36,46 @@ A comprehensive event scheduling and management system built with FastAPI (backe
 - Real-time updates
 - Mobile-responsive design
 
-## 🚀 Quick Start
+## 🚀 Quick Start & Local Deployment
 
 ### Prerequisites
-- Node.js 16+ and yarn
-- Python 3.11+
-- MongoDB
+- **Node.js 16+** and **yarn**
+- **Python 3.11+** 
+- **MongoDB** (local or Atlas)
 
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone <your-repo-url>
-cd itinerary-management-system
-```
-
-2. **Backend Setup**
-```bash
-cd backend
-pip install -r requirements.txt
-
-# Create .env file
-echo "MONGO_URL=mongodb://localhost:27017" > .env
-echo "DB_NAME=itinerary_management" >> .env
-```
-
-3. **Frontend Setup**
-```bash
-cd frontend
-yarn install
-
-# Create .env file
-echo "REACT_APP_BACKEND_URL=http://localhost:8001" > .env
-```
-
-4. **Start the services**
-```bash
-# Start backend (from backend directory)
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Start frontend (from frontend directory)
-yarn start
-
-# Start MongoDB
-sudo systemctl start mongodb
-```
-
-5. **Access the application**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8001
-- API Documentation: http://localhost:8001/docs
-
-## 💻 Local Development Setup (Detailed)
-
-### Step 1: Install Prerequisites
-
-#### **On Ubuntu/Debian:**
-```bash
-# Update package list
-sudo apt update
-
-# Install Node.js and yarn
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-npm install -g yarn
-
-# Install Python 3.11
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python3.11 python3.11-pip python3.11-venv
-
-# Install MongoDB
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-sudo apt update
-sudo apt install mongodb-org
-
-# Start MongoDB
-sudo systemctl start mongod
-sudo systemctl enable mongod
-```
-
-#### **On macOS:**
-```bash
-# Install Homebrew (if not installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install Node.js and yarn
-brew install node
-npm install -g yarn
-
-# Install Python 3.11
-brew install python@3.11
-
-# Install MongoDB
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb/brew/mongodb-community
-```
-
-#### **On Windows:**
-```powershell
-# Install using Chocolatey (run as Administrator)
-# Install Chocolatey first: https://chocolatey.org/install
-
-# Install Node.js and yarn
-choco install nodejs
-npm install -g yarn
-
-# Install Python 3.11
-choco install python --version=3.11.0
-
-# Install MongoDB
-choco install mongodb
-
-# Start MongoDB service
-net start MongoDB
-```
-
-### Step 2: Clone and Setup Project
+### 🎯 Option 1: Automated Setup (Recommended)
 
 ```bash
 # Clone the repository
 git clone <your-repo-url>
 cd itinerary-management-system
 
-# Verify directory structure
-ls -la
-# Should show: backend/ frontend/ README.md DEPLOYMENT_GUIDE.md
+# Run automated setup
+chmod +x setup-local.sh
+./setup-local.sh
+
+# Start all services
+chmod +x start-local.sh
+./start-local.sh
 ```
 
-### Step 3: Backend Setup (Python/FastAPI)
+### 🛠️ Option 2: Manual Setup
 
+#### Step 1: Clone Repository
 ```bash
-# Navigate to backend directory
+git clone <your-repo-url>
+cd itinerary-management-system
+```
+
+#### Step 2: Backend Setup
+```bash
 cd backend
 
-# Create virtual environment (recommended)
-python3.11 -m venv venv
+# Create and activate virtual environment
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install Python dependencies
+# Upgrade pip and install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
@@ -187,17 +86,15 @@ DB_NAME=itinerary_management
 SECRET_KEY=your-super-secret-key-change-in-production
 EOF
 
-# Verify backend setup
-python -c "import fastapi, motor, pymongo; print('All dependencies installed successfully!')"
+# Test the setup
+python -c "import motor, fastapi, uvicorn; print('✅ Backend setup successful!')"
 ```
 
-### Step 4: Frontend Setup (React)
-
+#### Step 3: Frontend Setup
 ```bash
-# Navigate to frontend directory (from project root)
-cd frontend
+cd ../frontend
 
-# Install Node.js dependencies
+# Install dependencies
 yarn install
 
 # Create environment file
@@ -206,217 +103,288 @@ WDS_SOCKET_PORT=443
 REACT_APP_BACKEND_URL=http://localhost:8001
 EOF
 
-# Verify frontend setup
-yarn --version
-node --version
+# Test the setup
+yarn --version && echo "✅ Frontend setup successful!"
 ```
 
-### Step 5: Database Setup (MongoDB)
-
+#### Step 4: Database Setup
 ```bash
-# Check if MongoDB is running
-mongosh --eval "db.adminCommand('ismaster')"
+# Start MongoDB (choose your platform)
 
-# If connection successful, create database (optional - will be created automatically)
-mongosh
-use itinerary_management
-show dbs
-exit
-```
-
-### Step 6: Start All Services
-
-#### **Option A: Using Supervisor (Recommended)**
-```bash
-# Check if supervisor is installed
-sudo supervisorctl status
-
-# If available, start all services
-sudo supervisorctl start all
-sudo supervisorctl status
-```
-
-#### **Option B: Manual Start (3 separate terminals)**
-
-**Terminal 1 - MongoDB:**
-```bash
-# Start MongoDB (if not already running)
+# Ubuntu/Debian:
 sudo systemctl start mongod
-# Or on macOS: brew services start mongodb/brew/mongodb-community
-# Or on Windows: net start MongoDB
+sudo systemctl enable mongod
 
-# Verify MongoDB is running
+# macOS:
+brew services start mongodb/brew/mongodb-community
+
+# Windows:
+net start MongoDB
+
+# Test connection
 mongosh --eval "db.adminCommand('ismaster')"
 ```
 
-**Terminal 2 - Backend:**
-```bash
-cd backend
-source venv/bin/activate  # If using virtual environment
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+#### Step 5: Start Services
 
-# You should see:
-# INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-# INFO:     Started reloader process
-# INFO:     Started server process
-# INFO:     Waiting for application startup.
-# INFO:     Application startup complete.
+**Option A: Using Scripts (Recommended)**
+```bash
+# Start all services
+./start-local.sh
+
+# Or start individually
+./start-local.sh backend   # Backend only
+./start-local.sh frontend  # Frontend only
 ```
 
-**Terminal 3 - Frontend:**
+**Option B: Manual Start (3 separate terminals)**
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+source venv/bin/activate
+export PYTHONPATH="$PWD:$PYTHONPATH"
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+```
+
+**Terminal 2 - Frontend:**
 ```bash
 cd frontend
 yarn start
-
-# You should see:
-# Compiled successfully!
-# You can now view frontend in the browser.
-# Local: http://localhost:3000
 ```
 
-### Step 7: Verify Installation
-
-1. **Backend API Test:**
+**Terminal 3 - MongoDB (if not using system service):**
 ```bash
-# Test backend API
-curl http://localhost:8001/api/
-# Should return: {"message":"Hello from the Itinerary Management System API"}
-
-# Check API documentation
-open http://localhost:8001/docs  # macOS
-# Or visit http://localhost:8001/docs in your browser
+mongod --dbpath /path/to/your/data/directory
 ```
 
-2. **Frontend Test:**
-```bash
-# Open frontend in browser
-open http://localhost:3000  # macOS
-# Or visit http://localhost:3000 in your browser
-```
+### 🌐 Access Your Application
 
-3. **Full System Test:**
-   - Visit http://localhost:3000
-   - Click "Register" and create a new account
-   - Login with your credentials
-   - Create a test event
-   - Verify notifications work
-
-### Step 8: Development Workflow
-
-```bash
-# Backend development (with auto-reload)
-cd backend
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Frontend development (with hot reload)
-cd frontend
-yarn start
-
-# View logs in real-time
-tail -f /var/log/supervisor/backend*.log  # If using supervisor
-tail -f /var/log/supervisor/frontend*.log
-```
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8001
+- **API Documentation**: http://localhost:8001/docs
 
 ### 🔧 Troubleshooting Local Setup
 
-#### **MongoDB Issues:**
+#### **"ModuleNotFoundError: No module named 'motor'" Fix:**
+
+```bash
+# Ensure virtual environment is activated
+cd backend
+source venv/bin/activate
+
+# Verify you're in the right environment
+which python
+which pip
+
+# Reinstall dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Test import specifically
+python -c "import motor; print('Motor imported successfully!')"
+
+# If still failing, try:
+pip uninstall motor pymongo
+pip install motor==3.3.1 pymongo==4.6.1
+
+# Set Python path explicitly
+export PYTHONPATH="$PWD:$PYTHONPATH"
+```
+
+#### **Port Already in Use:**
+```bash
+# Find and kill processes
+lsof -ti:8001 | xargs kill -9  # Backend port
+lsof -ti:3000 | xargs kill -9  # Frontend port
+```
+
+#### **MongoDB Connection Issues:**
 ```bash
 # Check MongoDB status
 sudo systemctl status mongod
 
-# Start MongoDB if stopped
-sudo systemctl start mongod
-
-# Check MongoDB logs
+# Check logs
 sudo tail -f /var/log/mongodb/mongod.log
 
-# Test connection
+# Test connection manually
 mongosh --eval "db.runCommand({connectionStatus : 1})"
-```
-
-#### **Backend Issues:**
-```bash
-# Check Python version
-python3.11 --version
-
-# Check if all packages are installed
-pip list | grep -E "(fastapi|uvicorn|motor|pymongo)"
-
-# Test backend directly
-cd backend
-python -c "from server import app; print('Backend imports successfully')"
-
-# Check backend logs
-tail -f /var/log/supervisor/backend*.log
-```
-
-#### **Frontend Issues:**
-```bash
-# Check Node.js and yarn versions
-node --version  # Should be 16+
-yarn --version
-
-# Clear cache and reinstall
-yarn cache clean
-rm -rf node_modules package-lock.json
-yarn install
-
-# Check frontend logs
-tail -f /var/log/supervisor/frontend*.log
-```
-
-#### **Port Conflicts:**
-```bash
-# Check what's running on ports
-lsof -i :3000  # Frontend port
-lsof -i :8001  # Backend port
-lsof -i :27017 # MongoDB port
-
-# Kill processes if needed
-sudo kill -9 <PID>
 ```
 
 #### **Permission Issues:**
 ```bash
-# Fix file permissions
-chmod +x backend/server.py
-chmod -R 755 frontend/src/
-
-# Fix ownership (if needed)
+# Fix permissions
+chmod +x setup-local.sh start-local.sh
+chmod -R 755 backend/ frontend/
 sudo chown -R $USER:$USER .
 ```
 
-### 🎯 Quick Commands Summary
+## ☁️ Cloud Deployment
 
+### 🔷 Vercel + Render Deployment (Recommended)
+
+#### Deploy Frontend to Vercel:
+
+1. **Prepare for Vercel:**
 ```bash
-# Start everything (with supervisor)
-sudo supervisorctl restart all
-
-# Start manually
-# Terminal 1: MongoDB
-sudo systemctl start mongod
-
-# Terminal 2: Backend
-cd backend && uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# Terminal 3: Frontend
-cd frontend && yarn start
-
-# Check status
-curl http://localhost:8001/api/  # Backend
-open http://localhost:3000       # Frontend
+# Update vercel.json with your backend URL
+# File is already created at project root
 ```
 
-### 🚀 Ready to Use!
+2. **Deploy to Vercel:**
+```bash
+# Install Vercel CLI
+npm install -g vercel
 
-Once all services are running:
-1. Visit **http://localhost:3000**
-2. **Register** a new account
-3. **Login** and start creating events
-4. **Test notifications** by creating events with start times in the near future
-5. **Enjoy** your fully functional itinerary management system!
+# Login and deploy
+vercel login
+vercel --prod
 
-**Your local development environment is now ready! 🎉**
+# Or use Vercel dashboard:
+# 1. Connect GitHub repo
+# 2. Import project
+# 3. Deploy automatically
+```
+
+#### Deploy Backend to Render:
+
+1. **Create Render Account**: Visit [render.com](https://render.com)
+
+2. **Deploy Backend:**
+   - Connect your GitHub repository
+   - Choose "Web Service"
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
+   - **Environment Variables**:
+     ```
+     MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/dbname
+     DB_NAME=itinerary_management
+     SECRET_KEY=your-secure-secret-key-here
+     ```
+
+3. **Update Frontend Environment:**
+```bash
+# Update frontend/.env with your Render backend URL
+REACT_APP_BACKEND_URL=https://your-app-name.onrender.com
+```
+
+### 🔷 Heroku Deployment
+
+#### Backend to Heroku:
+```bash
+# Install Heroku CLI
+# Login to Heroku
+heroku login
+
+# Create app
+heroku create your-app-name
+
+# Set environment variables
+heroku config:set MONGO_URL="your-mongodb-atlas-url"
+heroku config:set DB_NAME="itinerary_management"
+heroku config:set SECRET_KEY="your-secret-key"
+
+# Deploy
+git add .
+git commit -m "Deploy to Heroku"
+git push heroku main
+```
+
+#### Frontend to Heroku:
+```bash
+# Create separate app for frontend
+heroku create your-frontend-app
+
+# Set backend URL
+heroku config:set REACT_APP_BACKEND_URL="https://your-backend-app.herokuapp.com"
+
+# Add buildpack
+heroku buildpacks:set mars/create-react-app
+
+# Deploy
+git subtree push --prefix frontend heroku main
+```
+
+### 🔷 Railway Deployment
+
+1. **Visit [railway.app](https://railway.app)**
+2. **Connect GitHub repository**
+3. **Deploy backend and frontend as separate services**
+4. **Set environment variables in Railway dashboard**
+
+### 🔷 DigitalOcean App Platform
+
+1. **Visit [DigitalOcean Apps](https://cloud.digitalocean.com/apps)**
+2. **Connect GitHub repository**
+3. **Configure build and run commands**
+4. **Set environment variables**
+
+## 🗄️ Database Setup for Cloud Deployment
+
+### MongoDB Atlas (Recommended for Cloud):
+
+1. **Create Account**: Visit [mongodb.com](https://www.mongodb.com/)
+2. **Create Cluster**: Choose shared (free) tier
+3. **Create User**: Add database user with read/write permissions
+4. **Whitelist IP**: Add `0.0.0.0/0` for cloud deployments
+5. **Get Connection String**:
+   ```
+   mongodb+srv://username:password@cluster.mongodb.net/itinerary_management
+   ```
+
+### Environment Variables for Production:
+
+**Backend (.env or cloud platform settings):**
+```env
+MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/
+DB_NAME=itinerary_management
+SECRET_KEY=your-super-secure-secret-key-for-production
+```
+
+**Frontend (.env or cloud platform settings):**
+```env
+REACT_APP_BACKEND_URL=https://your-backend-domain.com
+```
+
+## 🔒 Production Security Checklist
+
+- [ ] Change default SECRET_KEY
+- [ ] Use environment variables for all sensitive data
+- [ ] Enable HTTPS/SSL
+- [ ] Set up proper CORS origins
+- [ ] Use MongoDB Atlas with authentication
+- [ ] Set up proper firewall rules
+- [ ] Enable rate limiting
+- [ ] Regular security updates
+
+## 📊 Quick Deployment Commands Summary
+
+```bash
+# Local Development
+./setup-local.sh && ./start-local.sh
+
+# Vercel Frontend
+vercel --prod
+
+# Render Backend
+# Use dashboard with:
+# Build: pip install -r requirements.txt
+# Start: uvicorn server:app --host 0.0.0.0 --port $PORT
+
+# Heroku Full Stack
+heroku create app-backend && heroku create app-frontend
+git push heroku main
+```
+
+## 🎯 Post-Deployment Testing
+
+1. **Test Registration**: Create a new account
+2. **Test Login**: Sign in with credentials
+3. **Test Events**: Create, edit, delete events
+4. **Test Notifications**: Verify sound alerts work
+5. **Test Mobile**: Check responsive design
+
+**Your application is now ready for local development and cloud deployment! 🚀**
 
 ## 📁 Project Structure
 

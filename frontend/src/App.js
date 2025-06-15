@@ -507,14 +507,6 @@ function Header() {
                   <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">Create Event</Link>
                 </li>
                 <li>
-                  <Link to="/reports" className="hover:text-gray-300" data-testid="reports-link">Reports</Link>
-                </li>
-                {(user.role === "admin" || user.role === "staff") && (
-                  <li>
-                    <Link to="/manage-users" className="hover:text-gray-300" data-testid="manage-users-link">Manage Users</Link>
-                  </li>
-                )}
-                <li>
                   <Notifications />
                 </li>
                 <li>

@@ -13,7 +13,7 @@
 
 ### 🔐 **Authentication & Security**
 - **Secure JWT Authentication** - Token-based authentication with automatic refresh
-- **Role-based Access Control** - Admin, Staff, and User roles with different permissions
+- **User Registration & Login** - Complete user management system
 - **Protected Routes** - Secure API endpoints and frontend route protection
 - **Password Security** - Bcrypt password hashing and validation
 
@@ -22,174 +22,185 @@
 - **Smart Calendar View** - Interactive monthly calendar with event display
 - **Priority System** - Color-coded priority levels (High, Medium, Low)
 - **Recurring Events** - Support for daily, weekly, and monthly recurrence
-- **Conflict Detection** - Automatic detection of scheduling conflicts
 - **Venue Management** - Location tracking for events
 
 ### 🔔 **Advanced Notifications**
 - **Real-time Sound Alerts** - Audio notifications 5 minutes before events start
 - **Browser Push Notifications** - Native browser notifications for upcoming events
 - **In-app Notification Center** - Bell icon with unread count and notification history
-- **Background Monitoring** - Continuous event time monitoring with cleanup
+- **Background Monitoring** - Continuous event time monitoring
 
 ### 🎨 **Modern UI/UX**
 - **Responsive Design** - Works perfectly on desktop, tablet, and mobile
 - **Tailwind CSS** - Modern, utility-first styling with custom components
 - **Interactive Components** - Modal dialogs, dropdown menus, and form validation
 - **Loading States** - Smooth loading indicators and error boundaries
-- **Accessibility** - Screen reader friendly with proper ARIA labels
 
 ### 🏗️ **Technical Excellence**
 - **Production Ready** - Comprehensive error handling and logging
-- **Performance Optimized** - Database indexing, caching, and code splitting
-- **Docker Support** - Complete containerization with docker-compose
+- **Simple Database** - SQLite for local, PostgreSQL for production
 - **Health Checks** - API health monitoring and status endpoints
-- **Environment Flexibility** - Easy configuration for different environments
+- **Easy Deployment** - Multiple deployment options with detailed guides
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/itinerary-management-system.git
-cd itinerary-management-system
+### **Prerequisites**
+- **Node.js 16+** and **yarn**
+- **Python 3.11+**
+- **Git**
 
-# Run one-command setup
-chmod +x deploy-local.sh
-./deploy-local.sh
-```
+### **Local Development Setup**
 
-### Option 2: Manual Setup
 ```bash
-# Backend setup
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+cd YOUR_REPOSITORY_NAME
+
+# 2. Setup environment files
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# 3. Backend setup
 cd backend
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Frontend setup  
-cd ../frontend
+# 4. Frontend setup (in another terminal)
+cd frontend
 yarn install
 
-# Start services
-npm run dev
+# 5. Start backend (first terminal)
+cd backend
+source venv/bin/activate
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# 6. Start frontend (second terminal)
+cd frontend
+yarn start
+
+# 7. Open your browser
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8001/docs
 ```
 
-## 🌐 Deployment
+### **Environment Configuration**
 
-### Local Development
-```bash
-npm run setup    # Complete local setup
-npm run dev      # Start development servers
-npm run dev:stop # Stop all services
+**Backend** (`backend/.env`):
+```env
+# For local development, leave DATABASE_URL empty (SQLite will be used)
+DATABASE_URL=
+SECRET_KEY=your-super-secret-key-here
+DEBUG=true
 ```
 
-### Cloud Deployment
-
-### 🚨 **VERCEL DEPLOYMENT FIX**
-
-**If you get the error: `sh: line 1: cd: frontend: No such file found`**
-
-**Quick Fix:**
-```bash
-# Use the deployment fix script
-./fix-vercel-deployment.sh
-
-# Or use the corrected frontend deployment
-./deploy-vercel-frontend.sh
+**Frontend** (`frontend/.env`):
+```env
+REACT_APP_BACKEND_URL=http://localhost:8001
+GENERATE_SOURCEMAP=false
 ```
 
-**Manual Fix in Vercel Dashboard:**
-1. Go to vercel.com → Your Project → Settings → General
-2. **⚠️ Change "Root Directory" from `./` to `frontend`**
-3. Go to Deployments → Click "Redeploy" on latest deployment
+## ☁️ **Cloud Deployment**
 
-#### Deploy to Vercel + Render (Recommended)
-```bash
-# Step 1: Deploy backend to Render (via dashboard)
-# Step 2: Deploy frontend to Vercel (fixed script)
-./deploy-vercel-frontend.sh
+### **🎯 Option 1: Render + Vercel (Recommended)**
 
-# Or use the automated fix
-./fix-vercel-deployment.sh
-```
+#### **Deploy Backend to Render:**
+1. Create account at [render.com](https://render.com)
+2. Create PostgreSQL database
+3. Create Web Service from GitHub
+4. Configure:
+   ```
+   Build Command: cd backend && pip install -r requirements.txt
+   Start Command: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT
+   ```
+5. Set environment variables:
+   ```
+   DATABASE_URL=postgresql://[from your PostgreSQL database]
+   SECRET_KEY=your-secure-secret-key
+   DEBUG=false
+   ```
 
-#### Deploy with Docker
-```bash
-npm run docker:build  # Build containers
-npm run docker:up     # Start all services
-npm run docker:logs   # View logs
-npm run docker:down   # Stop services
-```
+#### **Deploy Frontend to Vercel:**
+1. Create account at [vercel.com](https://vercel.com)
+2. Import GitHub repository
+3. **⚠️ Set Root Directory to `frontend`**
+4. Set environment variables:
+   ```
+   REACT_APP_BACKEND_URL=https://your-backend.onrender.com
+   GENERATE_SOURCEMAP=false
+   ```
 
-## 📋 System Requirements
+### **🎯 Option 2: Railway (Full Stack)**
+1. Create account at [railway.app](https://railway.app)
+2. Deploy from GitHub repository
+3. Add PostgreSQL database
+4. Configure environment variables for both services
 
-- **Node.js** 16+ and yarn
-- **Python** 3.11+
-- **MongoDB** (local or Atlas)
+### **🎯 Option 3: Netlify + Railway**
+Similar to Option 1, but use Netlify instead of Vercel for frontend.
+
+**📖 For detailed deployment instructions, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │                 │    │                 │    │                 │
-│   React Frontend│────│   FastAPI       │────│   MongoDB       │
-│   (Port 3000)   │    │   Backend       │    │   Database      │
+│   React Frontend│────│   FastAPI       │────│   SQLite/       │
+│   (Port 3000)   │    │   Backend       │    │   PostgreSQL    │
 │                 │    │   (Port 8001)   │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Tech Stack
+### **Tech Stack**
 
 **Frontend:**
 - React 19 with modern hooks and context
 - Tailwind CSS for styling
 - Axios for API communication
 - React Router for navigation
-- Web APIs for notifications and audio
 
 **Backend:**
-- FastAPI with async/await support
-- MongoDB with Motor async driver
+- FastAPI with SQLAlchemy ORM
+- SQLite (local) / PostgreSQL (production)
 - JWT authentication with jose
 - Password hashing with passlib
-- Background tasks for notifications
 
-**DevOps:**
-- Docker and docker-compose
-- Nginx reverse proxy
-- Health checks and monitoring
+**Deployment:**
+- Multiple platform support (Render, Vercel, Railway, Netlify)
 - Environment-based configuration
+- Health checks and monitoring
 
 ## 🎯 Usage Guide
 
-### Getting Started
+### **Getting Started**
 1. **Register Account** - Create your user account
 2. **Login** - Sign in with your credentials
 3. **Create Events** - Add your first event with details
 4. **View Calendar** - Navigate the monthly calendar view
 5. **Get Notified** - Receive alerts before events start
 
-### Key Features
+### **Key Features**
 
-#### Dashboard
+#### **Dashboard**
 - View upcoming events in card format
 - Quick access to event details
 - Create new events with one click
 - Edit or delete existing events
 
-#### Calendar View
+#### **Calendar View**
 - Monthly calendar with event display
 - Color-coded events by priority
 - Navigate between months easily
 - Click events for detailed view
 
-#### Event Management
+#### **Event Management**
 - Comprehensive event creation form
 - Set priority levels and recurrence
 - Add venue and participant information
-- Automatic conflict detection
+- Automatic time validation
 
-#### Notifications
+#### **Notifications**
 - Real-time sound alerts
 - Browser push notifications
 - In-app notification center
@@ -197,90 +208,69 @@ npm run docker:down   # Stop services
 
 ## 🔧 Configuration
 
-### Environment Variables
+### **Environment Variables**
 
-**Backend (.env)**
+**Backend** (`.env`):
 ```env
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=itinerary_management
+DATABASE_URL=postgresql://user:pass@host:5432/db  # Production only
 SECRET_KEY=your-super-secret-key-here
 DEBUG=false
 ```
 
-**Frontend (.env)**
+**Frontend** (`.env`):
 ```env
-REACT_APP_BACKEND_URL=http://localhost:8001
+REACT_APP_BACKEND_URL=https://your-backend-url.com
 GENERATE_SOURCEMAP=false
 ```
 
-### Production Configuration
-See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for complete production deployment guidelines.
+### **Database Options**
+- **Local Development**: SQLite (automatic, no setup)
+- **Production**: PostgreSQL (provided by hosting platforms)
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### **Common Issues**
 
-#### 🚨 **Vercel Error: "cd: frontend: No such file found"**
-This happens when Vercel tries to build from root directory but frontend is in subdirectory.
+#### **"Cannot connect to backend"**
+1. Check `REACT_APP_BACKEND_URL` in frontend `.env`
+2. Verify backend is running and accessible
+3. Check CORS settings
 
-**Solution 1: Use Fixed Script**
-```bash
-./fix-vercel-deployment.sh
-```
+#### **"Database connection failed"**
+1. Verify `DATABASE_URL` format for production
+2. For local: ensure backend directory is writable (SQLite)
+3. Check database service status
 
-**Solution 2: Manual Fix**
-1. Vercel Dashboard → Project → Settings → General
-2. Change "Root Directory" from `./` to `frontend`
-3. Redeploy
+#### **"Environment variables not working"**
+1. Restart services after changing `.env` files
+2. Verify exact variable names (case-sensitive)
+3. Check platform-specific environment variable settings
 
-**Solution 3: Use Frontend-Only Deployment**
-```bash
-./deploy-vercel-frontend.sh
-```
-
-#### "ModuleNotFoundError: No module named 'motor'"
-```bash
-cd backend
-source venv/bin/activate
-pip install --force-reinstall motor pymongo
-```
-
-#### Frontend Build Errors
-```bash
-cd frontend
-rm -rf node_modules package-lock.json
-yarn install
-yarn build
-```
-
-#### Database Connection Issues
-```bash
-# Check MongoDB status
-sudo systemctl status mongod
-
-# Restart MongoDB
-sudo systemctl restart mongod
-
-# Test connection
-mongosh --eval "db.adminCommand('ismaster')"
-```
-
-### Getting Help
-- Check the [troubleshooting guide](docs/TROUBLESHOOTING.md)
-- Review application logs
-- Verify environment variables
-- Test API endpoints manually
+**📖 For detailed troubleshooting, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
 
 ## 🧪 Testing
 
+### **Local Testing**
 ```bash
-# Run all tests
-npm run test:backend
-npm run test:frontend
+# Backend health check
+curl http://localhost:8001/api/health
 
-# Run specific tests
-cd backend && python -m pytest tests/
-cd frontend && yarn test --coverage
+# Complete user flow
+# 1. Visit http://localhost:3000
+# 2. Register new account
+# 3. Login
+# 4. Create event
+# 5. Check calendar
+```
+
+### **Production Testing**
+```bash
+# Backend health check
+curl https://your-backend-url/api/health
+
+# Frontend functionality test
+# 1. Visit your frontend URL
+# 2. Test complete user flow
 ```
 
 ## 🤝 Contributing
@@ -299,19 +289,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **FastAPI** - For the excellent Python web framework
 - **React** - For the robust frontend library
-- **MongoDB** - For the flexible database solution
+- **SQLAlchemy** - For the powerful ORM
 - **Tailwind CSS** - For the utility-first styling approach
-- **Vercel** - For seamless frontend deployment
-- **Render** - For reliable backend hosting
 
 ## 📞 Support
 
-- **Documentation**: [Full documentation](docs/)
 - **Issues**: [GitHub Issues](https://github.com/yourusername/itinerary-management-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/itinerary-management-system/discussions)
+- **Documentation**: [Deployment Guide](DEPLOYMENT_INSTRUCTIONS.md)
 
 ---
 
-**Built with ❤️ for efficient event management**
+**🚀 Ready to deploy? Follow the [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md) for step-by-step guides!**
 
 ⭐ **Star this repository if it helped you!**

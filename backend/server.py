@@ -12,6 +12,7 @@ import uuid
 from dotenv import load_dotenv
 import logging
 from contextlib import asynccontextmanager
+import sys
 
 # Import database components
 from database import get_db, create_tables, User, Event, Notification
@@ -625,3 +626,5 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+
+print(sys.path)

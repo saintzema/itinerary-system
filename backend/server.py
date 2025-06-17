@@ -947,6 +947,82 @@ async def mark_notification_read(
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to mark notification as read")
 
+# New API endpoints for advanced features
+@app.post("/api/parse-event", response_model=ParsedEventResponse)
+async def parse_natural_language_event(
+    request: NaturalLanguageEventRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Parse natural language text into event data"""
+    try:
+        logger.info(f"Parsing natural language event for user {current_user.username}: {request.text}")
+        
+        # Parse the text using OpenAI or fallback
+        parsed_data = parse_natural_language_event(request.text)
+        
+        return ParsedEventResponse(
+            title=parsed_data.get("title"),
+            description=parsed_data.get("description"),
+            start_time=parsed_data.get("start_time"),
+            end_time=parsed_data.get("end_time"),
+            venue=parsed_data.get("venue"),
+            priority=parsed_data.get("priority", "medium"),
+            confidence=parsed_data.get("confidence", 0.5),
+            raw_text=parsed_data.get("raw_text", request.text)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error parsing natural language event: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse event text")
+
+@app.post("/api/check-conflicts", response_model=ConflictCheckResponse)
+async def check_event_conflicts_endpoint(
+    request: ConflictCheckRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check for event conflicts and suggest alternative times"""
+    try:
+        # Validate times
+        if request.start_time >= request.end_time:
+            raise HTTPException(status_code=400, detail="End time must be after start time")
+        
+        # Check for conflicts
+        conflicts = check_event_conflicts(
+            db, 
+            current_user.id, 
+            request.start_time, 
+            request.end_time, 
+            exclude_event_id=request.event_id,
+            buffer_minutes=15
+        )
+        
+        has_conflict = len(conflicts) > 0
+        suggested_slots = []
+        
+        if has_conflict:
+            # Get alternative time slots
+            suggested_slots = suggest_alternative_time_slots(
+                db, 
+                current_user.id, 
+                request.start_time, 
+                request.end_time,
+                num_suggestions=5
+            )
+        
+        return ConflictCheckResponse(
+            has_conflict=has_conflict,
+            conflicts=conflicts,
+            suggested_slots=suggested_slots,
+            buffer_time_minutes=15
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking conflicts: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check event conflicts")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

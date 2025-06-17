@@ -306,7 +306,7 @@ def suggest_alternative_time_slots(db: Session, user_id: str, start_time: dateti
         logger.error(f"Error suggesting alternative time slots: {e}")
         return []
 
-def parse_natural_language_event(text: str) -> dict:
+def parse_natural_language_event_sync(text: str) -> dict:
     """Parse natural language text into event data using OpenAI"""
     try:
         if not OPENAI_API_KEY:

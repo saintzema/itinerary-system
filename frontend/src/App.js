@@ -1579,6 +1579,9 @@ function CreateEvent() {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("info");
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [conflictData, setConflictData] = useState(null);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
   const navigate = useNavigate();
   
   // Check if we're in edit mode (passed from event details)

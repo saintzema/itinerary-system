@@ -11,38 +11,38 @@
 
 ## ✨ Features
 
-### 🔐 **Authentication & Security**
+### **Authentication & Security**
 - **Secure JWT Authentication** - Token-based authentication with automatic refresh
 - **User Registration & Login** - Complete user management system
 - **Protected Routes** - Secure API endpoints and frontend route protection
 - **Password Security** - Bcrypt password hashing and validation
 
-### 📅 **Event Management**
+### **Event Management**
 - **Full CRUD Operations** - Create, read, update, and delete events
 - **Smart Calendar View** - Interactive monthly calendar with event display
 - **Priority System** - Color-coded priority levels (High, Medium, Low)
 - **Recurring Events** - Support for daily, weekly, and monthly recurrence
 - **Venue Management** - Location tracking for events
 
-### 🔔 **Advanced Notifications**
+### **Advanced Notifications**
 - **Real-time Sound Alerts** - Audio notifications 5 minutes before events start
 - **Browser Push Notifications** - Native browser notifications for upcoming events
 - **In-app Notification Center** - Bell icon with unread count and notification history
 - **Background Monitoring** - Continuous event time monitoring
 
-### 🎨 **Modern UI/UX**
+### **Modern UI/UX**
 - **Responsive Design** - Works perfectly on desktop, tablet, and mobile
 - **Tailwind CSS** - Modern, utility-first styling with custom components
 - **Interactive Components** - Modal dialogs, dropdown menus, and form validation
 - **Loading States** - Smooth loading indicators and error boundaries
 
-### 🏗️ **Technical Excellence**
+### **Technical Excellence**
 - **Production Ready** - Comprehensive error handling and logging
 - **Simple Database** - SQLite for local, PostgreSQL for production
 - **Health Checks** - API health monitoring and status endpoints
 - **Easy Deployment** - Multiple deployment options with detailed guides
 
-## 🚀 Quick Start
+## Quick Start
 
 ### **Prerequisites**
 - **Node.js 16+** and **yarn**
@@ -53,8 +53,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-cd YOUR_REPOSITORY_NAME
+git clone https://github.com/saintzema/itinerary-system.git
+cd itinerary-system
 
 # 2. Setup environment files
 cp backend/.env.example backend/.env
@@ -102,7 +102,7 @@ GENERATE_SOURCEMAP=false
 
 ## ☁️ **Cloud Deployment**
 
-### **🎯 Option 1: Render + Vercel (Recommended)**
+### ** Option 1: Render + Vercel (Recommended)**
 
 #### **Deploy Backend to Render:**
 1. Create account at [render.com](https://render.com)
@@ -130,18 +130,18 @@ GENERATE_SOURCEMAP=false
    GENERATE_SOURCEMAP=false
    ```
 
-### **🎯 Option 2: Railway (Full Stack)**
+### **Option 2: Railway (Full Stack)**
 1. Create account at [railway.app](https://railway.app)
 2. Deploy from GitHub repository
 3. Add PostgreSQL database
 4. Configure environment variables for both services
 
-### **🎯 Option 3: Netlify + Railway**
+### **Option 3: Netlify + Railway**
 Similar to Option 1, but use Netlify instead of Vercel for frontend.
 
-**📖 For detailed deployment instructions, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
+**For detailed deployment instructions, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -171,7 +171,7 @@ Similar to Option 1, but use Netlify instead of Vercel for frontend.
 - Environment-based configuration
 - Health checks and monitoring
 
-## 🎯 Usage Guide
+## Usage Guide
 
 ### **Getting Started**
 1. **Register Account** - Create your user account
@@ -246,7 +246,7 @@ GENERATE_SOURCEMAP=false
 2. Verify exact variable names (case-sensitive)
 3. Check platform-specific environment variable settings
 
-**📖 For detailed troubleshooting, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
+**For detailed troubleshooting, see [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md)**
 
 ## 🧪 Testing
 
@@ -273,7 +273,7 @@ curl https://your-backend-url/api/health
 # 2. Test complete user flow
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -285,20 +285,20 @@ curl https://your-backend-url/api/health
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **FastAPI** - For the excellent Python web framework
 - **React** - For the robust frontend library
 - **SQLAlchemy** - For the powerful ORM
 - **Tailwind CSS** - For the utility-first styling approach
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/itinerary-management-system/issues)
 - **Documentation**: [Deployment Guide](DEPLOYMENT_INSTRUCTIONS.md)
 
 ---
 
-**🚀 Ready to deploy? Follow the [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md) for step-by-step guides!**
+**Ready to deploy? Follow the [DEPLOYMENT_INSTRUCTIONS.md](DEPLOYMENT_INSTRUCTIONS.md) for step-by-step guides!**
 
-⭐ **Star this repository if it helped you!**
+**Star this repository if it helped you!**

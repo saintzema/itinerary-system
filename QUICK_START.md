@@ -1,4 +1,4 @@
-# 🚀 Quick Deployment Reference
+# Quick Deployment Reference
 
 ## Local Development (Fastest)
 

@@ -1,19 +1,19 @@
-# 🚀 Complete Deployment Instructions
+# Complete Deployment Instructions
 
-## 📋 **Prerequisites**
+## **Prerequisites**
 
 Before deploying, you need:
 - GitHub account with your repository
 - Accounts on your chosen platforms (Render/Vercel, etc.)
 
-## 🏠 **Local Development Setup**
+## **Local Development Setup**
 
 ### Step 1: Clone and Setup
 
 ```bash
 # Clone your repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-cd YOUR_REPOSITORY_NAME
+git clone https://github.com/saintzema/itinerary-system.git
+cd itinerary-system
 
 # Copy environment files and configure
 cp backend/.env.example backend/.env
@@ -182,7 +182,7 @@ yarn start
    REACT_APP_BACKEND_URL=https://your-backend.up.railway.app
    ```
 
-## 🔐 **Environment Variables Guide**
+## **Environment Variables Guide**
 
 ### **Backend Environment Variables**
 
@@ -231,7 +231,7 @@ yarn start
 5. **Calendar**: Check calendar view
 6. **Notifications**: Verify notification system
 
-## 🐛 **Troubleshooting**
+## **Troubleshooting**
 
 ### **Common Issues**
 
@@ -265,7 +265,7 @@ Before deployment, ensure you have:
 - [ ] Repository pushed to GitHub
 - [ ] Platform accounts created (Render, Vercel, etc.)
 
-## 🎯 **Platform-Specific Notes**
+## **Platform-Specific Notes**
 
 ### **Render**
 - Free tier has limitations (sleeps after inactivity)
@@ -287,7 +287,7 @@ Before deployment, ensure you have:
 - Similar setup process
 - Good free tier for frontends
 
-## 🎉 **Success Indicators**
+## **Success Indicators**
 
 You know deployment is successful when:
 
@@ -299,4 +299,4 @@ You know deployment is successful when:
 - ✅ Calendar displays properly
 - ✅ Notifications system functions
 
-**Your itinerary management system is now live and ready for users! 🚀**
+**Your itinerary management system is now live and ready for users! **

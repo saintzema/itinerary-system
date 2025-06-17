@@ -143,35 +143,49 @@ function ProtectedRoute({ children }) {
 
 // Components
 // Play notification sound - using a simpler approach to avoid browser restrictions
+
+
 function playNotificationSound() {
   try {
-    // Use simple beep sound that's created programmatically
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 830; // Notification beep frequency
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Keep the volume reasonable
-    gainNode.gain.value = 0.1;
-    
-    // Play a short beep
-    oscillator.start();
-    setTimeout(() => {
-      oscillator.stop();
-      // Clean up
-      setTimeout(() => {
-        oscillator.disconnect();
-        gainNode.disconnect();
-      }, 100);
-    }, 200);
+    const audio = new Audio('/sounds/notification.wav'); // path to your sound file
+    audio.volume = 0.5; // adjust volume
+    audio.play();
   } catch (e) {
     console.warn("Unable to play notification sound:", e);
   }
 }
+
+//Play notification sound programmatically
+
+// function playNotificationSound() {
+//   try {
+//     // Use simple beep sound that's created programmatically
+//     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+//     const oscillator = audioContext.createOscillator();
+//     const gainNode = audioContext.createGain();
+    
+//     oscillator.type = 'sine';
+//     oscillator.frequency.value = 830; // Notification beep frequency
+//     oscillator.connect(gainNode);
+//     gainNode.connect(audioContext.destination);
+    
+//     // Keep the volume reasonable
+//     gainNode.gain.value = 0.1;
+    
+//     // Play a short beep
+//     oscillator.start();
+//     setTimeout(() => {
+//       oscillator.stop();
+//       // Clean up
+//       setTimeout(() => {
+//         oscillator.disconnect();
+//         gainNode.disconnect();
+//       }, 100);
+//     }, 200);
+//   } catch (e) {
+//     console.warn("Unable to play notification sound:", e);
+//   }
+// }
 
 // Event time notification checker
 function useEventTimeNotifications(events) {

@@ -373,6 +373,20 @@ class ItineraryAPITester:
                 print("❌ Event was created despite conflict - test failed")
                 return False
             else:
+                # Check if we got suggested alternative time slots
+                if isinstance(conflict_response, dict) and 'detail' in conflict_response:
+                    detail = conflict_response['detail']
+                    if isinstance(detail, dict):
+                        conflicts = detail.get('conflicts', [])
+                        suggested_slots = detail.get('suggested_slots', [])
+                        
+                        print(f"Number of conflicts detected: {len(conflicts)}")
+                        print(f"Number of suggested slots: {len(suggested_slots)}")
+                        
+                        if len(conflicts) > 0 and len(suggested_slots) > 0:
+                            print("✅ Conflict was correctly detected with suggested alternatives")
+                            return True
+                
                 print("✅ Conflict was correctly detected")
                 return True
         return False

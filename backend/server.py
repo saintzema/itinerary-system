@@ -957,7 +957,7 @@ async def parse_natural_language_event(
     try:
         logger.info(f"Parsing natural language event for user {current_user.username}: {request.text}")
         
-        # Parse the text using OpenAI or fallback
+        # Parse the text using OpenAI or fallback (this is now a regular function, not async)
         parsed_data = parse_natural_language_event(request.text)
         
         return ParsedEventResponse(

@@ -587,6 +587,10 @@ class ItineraryAPITester:
             self.test_check_conflicts_endpoint()
             self.test_create_conflicting_events()
             
+            # Test integration workflow
+            print("\n🔄 Testing End-to-End Integration...")
+            self.test_integration_workflow()
+            
             # Test notifications after creating an event
             print("\n📬 Testing Notifications...")
             if not self.test_get_notifications():

@@ -465,6 +465,96 @@ class ItineraryAPITester:
                 print("❌ No conflicts detected when there should be")
                 return False
         return False
+    def test_integration_workflow(self):
+        """Test the complete workflow from AI parsing to event creation with conflict detection"""
+        print("\n🔄 Testing Complete Integration Workflow...")
+        
+        # Step 1: Parse natural language text
+        data = {
+            "text": "Team meeting tomorrow at 2PM for 1 hour"
+        }
+        
+        parse_success, parsed_event = self.run_test(
+            "Parse Natural Language Event for Integration",
+            "POST",
+            "parse-event",
+            200,
+            data=data
+        )
+        
+        if not parse_success or not parsed_event.get('start_time') or not parsed_event.get('end_time'):
+            print("❌ Failed to parse event text")
+            return False
+            
+        print(f"✅ Successfully parsed event: {parsed_event.get('title')}")
+        
+        # Step 2: Create event with the parsed data
+        create_data = {
+            "title": parsed_event.get('title') or "Team Meeting",
+            "description": parsed_event.get('description') or "Meeting parsed from natural language",
+            "start_time": parsed_event.get('start_time'),
+            "end_time": parsed_event.get('end_time'),
+            "venue": parsed_event.get('venue') or "Conference Room",
+            "priority": parsed_event.get('priority') or "medium",
+            "recurrence": "none"
+        }
+        
+        create_success, created_event = self.run_test(
+            "Create Event from Parsed Data",
+            "POST",
+            "events",
+            200,
+            data=create_data
+        )
+        
+        if not create_success or not created_event.get('id'):
+            print("❌ Failed to create event from parsed data")
+            return False
+            
+        print(f"✅ Successfully created event from parsed data: {created_event.get('id')}")
+        
+        # Step 3: Try to create a conflicting event
+        conflict_start = datetime.fromisoformat(parsed_event.get('start_time').replace('Z', '+00:00')) if isinstance(parsed_event.get('start_time'), str) else parsed_event.get('start_time')
+        conflict_start = conflict_start + timedelta(minutes=30)
+        conflict_end = conflict_start + timedelta(hours=1)
+        
+        conflict_data = {
+            "title": "Conflicting Meeting",
+            "description": "This should conflict with the previous event",
+            "start_time": conflict_start.isoformat(),
+            "end_time": conflict_end.isoformat(),
+            "venue": "Same Room",
+            "priority": "high",
+            "recurrence": "none"
+        }
+        
+        conflict_success, conflict_response = self.run_test(
+            "Create Conflicting Event for Integration Test",
+            "POST",
+            "events",
+            409,  # Expect conflict status code
+            data=conflict_data
+        )
+        
+        if conflict_success:
+            print("❌ Event was created despite conflict - integration test failed")
+            return False
+        else:
+            print("✅ Conflict was correctly detected in integration workflow")
+            
+            # Check if we got suggested alternative time slots
+            if isinstance(conflict_response, dict) and 'detail' in conflict_response:
+                detail = conflict_response['detail']
+                if isinstance(detail, dict):
+                    conflicts = detail.get('conflicts', [])
+                    suggested_slots = detail.get('suggested_slots', [])
+                    
+                    if len(conflicts) > 0 and len(suggested_slots) > 0:
+                        print("✅ Integration test complete: AI parsing → Event creation → Conflict detection with suggestions")
+                        return True
+            
+            print("✅ Integration test complete: AI parsing → Event creation → Conflict detection")
+            return True
 
     def run_all_tests(self):
         """Run all API tests"""

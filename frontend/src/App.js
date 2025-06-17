@@ -402,7 +402,7 @@ function Notifications() {
     if (diffMins < 1) {
       return "just now";
     } else if (diffMins < 60) {
-      return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
     } else if (diffHrs < 24) {
       return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;
     } else if (diffDays < 7) {

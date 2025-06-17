@@ -1953,6 +1953,146 @@ function CreateEvent() {
           </button>
         </div>
       </form>
+
+      {/* Conflict Detection Modal */}
+      {showConflictModal && conflictData && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50" data-testid="conflict-modal">
+          <div className="relative mx-auto p-0 border w-full max-w-2xl shadow-lg rounded-lg bg-white overflow-hidden">
+            <div className="bg-red-500 p-4 text-white">
+              <div className="flex justify-between items-start">
+                <h3 className="text-xl font-bold">⚠️ Scheduling Conflict Detected</h3>
+                <button 
+                  onClick={() => setShowConflictModal(false)}
+                  className="text-white hover:text-gray-200 bg-gray-700 bg-opacity-30 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
+                  data-testid="close-conflict-modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                Your event conflicts with {conflictData.conflicts.length} existing event(s). 
+                Please choose a different time or select one of the suggested alternatives below.
+              </p>
+
+              {/* Conflicting Events */}
+              {conflictData.conflicts && conflictData.conflicts.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3 text-red-700">Conflicting Events:</h4>
+                  <div className="space-y-2">
+                    {conflictData.conflicts.map((conflict, index) => (
+                      <div key={index} className="bg-red-50 border border-red-200 rounded p-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h5 className="font-medium text-red-800">{conflict.title}</h5>
+                            <p className="text-sm text-red-600">
+                              {new Date(conflict.start_time).toLocaleString()} - {new Date(conflict.end_time).toLocaleString()}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            conflict.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            conflict.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {conflict.priority} priority
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Suggested Time Slots */}
+              {conflictData.suggested_slots && conflictData.suggested_slots.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-3 text-green-700">Suggested Alternative Times:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {conflictData.suggested_slots.map((slot, index) => (
+                      <button
+                        key={index}
+                        onClick={() => useSuggestedSlot(slot)}
+                        className="text-left p-4 bg-green-50 border border-green-200 rounded hover:bg-green-100 transition-colors"
+                        data-testid={`suggested-slot-${index}`}
+                      >
+                        <div className="font-medium text-green-800">{slot.date}</div>
+                        <div className="text-sm text-green-600">{slot.time_range}</div>
+                        <div className="text-xs text-green-500 mt-1">Click to use this time</div>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {conflictData.suggested_slots.length === 0 && (
+                    <p className="text-gray-500 italic">No alternative time slots found within the next 2 weeks.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-200 flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowConflictModal(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Back to Edit
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowConflictModal(false);
+                    setConflictData(null);
+                    // Force create anyway (you could add a confirmation here)
+                    const forceCreate = async () => {
+                      try {
+                        setLoading(true);
+                        const token = localStorage.getItem("token");
+                        const eventData = { ...formData };
+                        
+                        if (eventData.recurrence === "none") {
+                          eventData.recurrence_end_date = null;
+                        }
+                        if (eventData.recurrence_end_date === "") {
+                          eventData.recurrence_end_date = null;
+                        }
+
+                        // Force create by calling the API directly (bypassing conflict check)
+                        const response = await axios.post(`${API}/events`, eventData, {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                        });
+
+                        navigate("/dashboard", { 
+                          state: { 
+                            message: "Event created successfully (conflicts ignored)", 
+                            messageType: "warning",
+                            eventId: response.data.id
+                          } 
+                        });
+                      } catch (error) {
+                        console.error("Error force creating event:", error);
+                        setError("Failed to create event. Please try again.");
+                      } finally {
+                        setLoading(false);
+                      }
+                    };
+                    
+                    if (confirm("Are you sure you want to create this event despite the conflicts? This may cause scheduling issues.")) {
+                      forceCreate();
+                    }
+                  }}
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  data-testid="force-create-button"
+                >
+                  Create Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

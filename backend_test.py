@@ -20,6 +20,7 @@ class ItineraryAPITester:
         self.test_full_name = "Test User"
         self.event_id = None
         self.notification_id = None
+        self.conflicting_event_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""

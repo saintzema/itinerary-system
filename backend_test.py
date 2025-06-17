@@ -285,26 +285,39 @@ class ItineraryAPITester:
         
     def test_parse_natural_language_event(self):
         """Test parsing natural language text into event data"""
-        data = {
-            "text": "Meeting with John tomorrow at 2PM for 1 hour in Conference Room A"
-        }
+        test_phrases = [
+            "Meeting with John tomorrow at 2PM for 1 hour in Conference Room A",
+            "Lunch with Sarah on Friday at 1PM for 2 hours",
+            "Team meeting tomorrow at 2PM for 1 hour"
+        ]
         
-        success, response = self.run_test(
-            "Parse Natural Language Event",
-            "POST",
-            "parse-event",
-            200,
-            data=data
-        )
-        
-        if success:
-            print(f"Parsed event: {response.get('title')}")
-            print(f"Start time: {response.get('start_time')}")
-            print(f"End time: {response.get('end_time')}")
-            print(f"Venue: {response.get('venue')}")
-            print(f"Confidence: {response.get('confidence')}")
-            return True
-        return False
+        all_passed = True
+        for phrase in test_phrases:
+            data = {"text": phrase}
+            
+            success, response = self.run_test(
+                f"Parse Natural Language Event: '{phrase}'",
+                "POST",
+                "parse-event",
+                200,
+                data=data
+            )
+            
+            if success:
+                print(f"Parsed event: {response.get('title')}")
+                print(f"Start time: {response.get('start_time')}")
+                print(f"End time: {response.get('end_time')}")
+                print(f"Venue: {response.get('venue')}")
+                print(f"Confidence: {response.get('confidence')}")
+                
+                # Verify that we got reasonable results
+                if not response.get('title') or not response.get('start_time') or not response.get('end_time'):
+                    print("❌ Missing essential fields in parsed event")
+                    all_passed = False
+            else:
+                all_passed = False
+                
+        return all_passed
         
     def test_create_conflicting_events(self):
         """Test creating events that conflict with each other"""

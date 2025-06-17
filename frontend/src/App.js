@@ -1635,6 +1635,47 @@ function CreateEvent() {
     });
   };
 
+  // Function to check for conflicts
+  const checkConflicts = async (startTime, endTime) => {
+    try {
+      setCheckingConflicts(true);
+      const token = localStorage.getItem("token");
+      
+      const response = await axios.post(
+        `${API}/check-conflicts`,
+        {
+          start_time: new Date(startTime).toISOString(),
+          end_time: new Date(endTime).toISOString(),
+          event_id: isEditMode ? editId : null
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error checking conflicts:", error);
+      return { has_conflict: false, conflicts: [], suggested_slots: [] };
+    } finally {
+      setCheckingConflicts(false);
+    }
+  };
+
+  // Function to handle using a suggested time slot
+  const useSuggestedSlot = (slot) => {
+    setFormData({
+      ...formData,
+      start_time: formatDateTimeForInput(new Date(slot.start_time)),
+      end_time: formatDateTimeForInput(new Date(slot.end_time))
+    });
+    setShowConflictModal(false);
+    setConflictData(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");

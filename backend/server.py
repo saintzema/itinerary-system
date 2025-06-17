@@ -29,8 +29,16 @@ logger = logging.getLogger(__name__)
 
 # Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24 * 30  # 30 days
+
+# Initialize OpenAI client
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
+    logger.info("OpenAI API key configured successfully")
+else:
+    logger.warning("OpenAI API key not found. Natural language processing will not be available.")
 
 # Lifespan event handler
 @asynccontextmanager

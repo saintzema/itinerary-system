@@ -522,6 +522,9 @@ function Header() {
                   <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">Create Event</Link>
                 </li>
                 <li>
+                  <Link to="/create-with-ai" className="hover:text-gray-300" data-testid="create-with-ai-link">Create with AI</Link>
+                </li>
+                <li>
                   <Notifications />
                 </li>
                 <li>

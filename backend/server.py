@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 import logging
 from contextlib import asynccontextmanager
 import sys
+import openai
+import json
+import re
 
 # Import database components
 from database import get_db, create_tables, User, Event, Notification

@@ -1692,6 +1692,17 @@ function CreateEvent() {
     }
 
     try {
+      // First check for conflicts
+      const conflictCheck = await checkConflicts(formData.start_time, formData.end_time);
+      
+      if (conflictCheck.has_conflict && !isEditMode) {
+        // Show conflict modal for new events
+        setConflictData(conflictCheck);
+        setShowConflictModal(true);
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem("token");
       
       // Create a copy of the form data to prevent modifying state directly
@@ -1747,11 +1758,19 @@ function CreateEvent() {
     } catch (error) {
       console.error("Event operation error:", error);
       
-      if (error.response && error.response.data) {
-        // Handle error detail which might be an object or string
+      if (error.response && error.response.status === 409) {
+        // Handle conflict response from backend
+        const conflictDetails = error.response.data.detail;
+        setConflictData({
+          has_conflict: true,
+          conflicts: conflictDetails.conflicts || [],
+          suggested_slots: conflictDetails.suggested_slots || []
+        });
+        setShowConflictModal(true);
+      } else if (error.response && error.response.data) {
+        // Handle other errors
         const detail = error.response.data.detail;
         if (typeof detail === 'object') {
-          // If detail is an object, provide a user-friendly message
           setError(`Failed to ${isEditMode ? 'update' : 'create'} event. Please check your input and try again.`);
         } else {
           setError(detail || `Failed to ${isEditMode ? 'update' : 'create'} event`);

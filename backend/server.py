@@ -128,6 +128,44 @@ class NotificationResponse(BaseModel):
     created_at: datetime
     read_at: Optional[datetime]
 
+# New models for advanced features
+class NaturalLanguageEventRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=500)
+
+class ParsedEventResponse(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    start_time: Optional[datetime]
+    end_time: Optional[datetime]
+    venue: Optional[str]
+    priority: Optional[str] = "medium"
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    raw_text: str
+
+class ConflictCheckRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    event_id: Optional[str] = None  # For updates, exclude this event from conflict check
+
+class ConflictingEvent(BaseModel):
+    id: str
+    title: str
+    start_time: datetime
+    end_time: datetime
+    priority: str
+
+class TimeSlot(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    date: str
+    time_range: str
+
+class ConflictCheckResponse(BaseModel):
+    has_conflict: bool
+    conflicts: List[ConflictingEvent]
+    suggested_slots: List[TimeSlot]
+    buffer_time_minutes: int = 15
+
 # Utility functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

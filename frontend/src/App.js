@@ -394,7 +394,14 @@ function Notifications() {
     const diffHrs = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
     
-    if (diffMins < 60) {
+    // Handle negative values (future times or timezone issues)
+    if (diffMs < 0) {
+      return "just now";
+    }
+    
+    if (diffMins < 1) {
+      return "just now";
+    } else if (diffMins < 60) {
       return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
     } else if (diffHrs < 24) {
       return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;

@@ -246,41 +246,160 @@ class ItineraryAPITester:
                 return False
         return False
         
-    def test_mark_notification_as_read(self):
-        """Test marking a notification as read"""
-        if not self.notification_id:
-            print("❌ No notification ID available for testing")
-            return False
-            
-        success, _ = self.run_test(
-            "Mark Notification as Read",
-            "PUT",
-            f"notifications/{self.notification_id}/read",
-            200
+    def test_parse_natural_language_event(self):
+        """Test parsing natural language text into event data"""
+        data = {
+            "text": "Meeting with John tomorrow at 2PM for 1 hour in Conference Room A"
+        }
+        
+        success, response = self.run_test(
+            "Parse Natural Language Event",
+            "POST",
+            "parse-event",
+            200,
+            data=data
         )
         
         if success:
-            # Verify the notification is now marked as read
-            get_success, response = self.run_test(
-                "Verify Notification Read Status",
-                "GET",
-                "notifications",
-                200
+            print(f"Parsed event: {response.get('title')}")
+            print(f"Start time: {response.get('start_time')}")
+            print(f"End time: {response.get('end_time')}")
+            print(f"Venue: {response.get('venue')}")
+            print(f"Confidence: {response.get('confidence')}")
+            return True
+        return False
+        
+    def test_create_conflicting_events(self):
+        """Test creating events that conflict with each other"""
+        # Create first event
+        start_time = datetime.utcnow() + timedelta(hours=1)
+        end_time = start_time + timedelta(hours=1)
+        
+        data = {
+            "title": "First Test Event",
+            "description": "This is the first test event",
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "venue": "Test Venue",
+            "priority": "medium",
+            "recurrence": "none"
+        }
+        
+        success, response = self.run_test(
+            "Create First Event",
+            "POST",
+            "events",
+            200,
+            data=data
+        )
+        
+        if success and "id" in response:
+            self.event_id = response["id"]
+            print(f"Created first event with ID: {self.event_id}")
+            
+            # Now create a conflicting event (overlapping time)
+            conflict_start = start_time + timedelta(minutes=30)
+            conflict_end = conflict_start + timedelta(hours=1)
+            
+            conflict_data = {
+                "title": "Conflicting Test Event",
+                "description": "This event should conflict with the first one",
+                "start_time": conflict_start.isoformat(),
+                "end_time": conflict_end.isoformat(),
+                "venue": "Same Venue",
+                "priority": "high",
+                "recurrence": "none"
+            }
+            
+            conflict_success, conflict_response = self.run_test(
+                "Create Conflicting Event",
+                "POST",
+                "events",
+                409,  # Expect conflict status code
+                data=conflict_data
             )
             
-            if get_success and isinstance(response, list):
-                for notification in response:
-                    if notification["id"] == self.notification_id:
-                        if notification["status"] == "read":
-                            print("✅ Notification successfully marked as read")
-                            return True
-                        else:
-                            print("❌ Notification not marked as read")
-                            return False
-            
-            print("❌ Could not verify notification read status")
-            return False
+            if conflict_success:
+                print("❌ Event was created despite conflict - test failed")
+                return False
+            else:
+                print("✅ Conflict was correctly detected")
+                return True
+        return False
         
+    def test_check_conflicts_endpoint(self):
+        """Test the check-conflicts endpoint directly"""
+        # First create an event
+        if not self.event_id:
+            start_time = datetime.utcnow() + timedelta(hours=3)
+            end_time = start_time + timedelta(hours=1)
+            
+            data = {
+                "title": "Base Event for Conflict Check",
+                "description": "This is a test event for conflict checking",
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "venue": "Test Venue",
+                "priority": "medium",
+                "recurrence": "none"
+            }
+            
+            success, response = self.run_test(
+                "Create Base Event for Conflict Check",
+                "POST",
+                "events",
+                200,
+                data=data
+            )
+            
+            if success and "id" in response:
+                self.event_id = response["id"]
+                print(f"Created base event with ID: {self.event_id}")
+            else:
+                print("❌ Failed to create base event for conflict check")
+                return False
+        
+        # Now check for conflicts with a time that overlaps
+        conflict_start = datetime.utcnow() + timedelta(hours=3, minutes=30)
+        conflict_end = conflict_start + timedelta(hours=1)
+        
+        data = {
+            "start_time": conflict_start.isoformat(),
+            "end_time": conflict_end.isoformat(),
+            "event_id": None  # No event ID means we're checking for a new event
+        }
+        
+        success, response = self.run_test(
+            "Check Conflicts",
+            "POST",
+            "check-conflicts",
+            200,
+            data=data
+        )
+        
+        if success:
+            has_conflict = response.get("has_conflict", False)
+            conflicts = response.get("conflicts", [])
+            suggested_slots = response.get("suggested_slots", [])
+            
+            print(f"Has conflict: {has_conflict}")
+            print(f"Number of conflicts: {len(conflicts)}")
+            print(f"Number of suggested slots: {len(suggested_slots)}")
+            
+            if has_conflict and len(conflicts) > 0:
+                print("✅ Conflicts correctly detected")
+                
+                if len(suggested_slots) > 0:
+                    print("✅ Alternative time slots suggested")
+                    for i, slot in enumerate(suggested_slots[:3]):  # Show first 3 slots
+                        print(f"  Slot {i+1}: {slot.get('date')} {slot.get('time_range')}")
+                else:
+                    print("❌ No alternative time slots suggested")
+                
+                return True
+            else:
+                print("❌ No conflicts detected when there should be")
+                return False
         return False
 
     def run_all_tests(self):

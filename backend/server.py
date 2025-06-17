@@ -650,11 +650,45 @@ async def create_event(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new event"""
+    """Create a new event with conflict detection"""
     try:
         # Validate event times
         if event.start_time >= event.end_time:
             raise HTTPException(status_code=400, detail="End time must be after start time")
+        
+        # Check for conflicts
+        conflicts = check_event_conflicts(db, current_user.id, event.start_time, event.end_time)
+        
+        if conflicts:
+            # Get alternative time slots
+            suggestions = suggest_alternative_time_slots(db, current_user.id, event.start_time, event.end_time)
+            
+            conflict_details = {
+                "message": f"Event conflicts with {len(conflicts)} existing event(s)",
+                "conflicts": [
+                    {
+                        "title": conflict.title,
+                        "start_time": conflict.start_time.isoformat(),
+                        "end_time": conflict.end_time.isoformat(),
+                        "priority": conflict.priority
+                    }
+                    for conflict in conflicts
+                ],
+                "suggested_slots": [
+                    {
+                        "start_time": slot.start_time.isoformat(),
+                        "end_time": slot.end_time.isoformat(),
+                        "date": slot.date,
+                        "time_range": slot.time_range
+                    }
+                    for slot in suggestions
+                ]
+            }
+            
+            raise HTTPException(
+                status_code=409,  # Conflict status code
+                detail=conflict_details
+            )
         
         event_id = str(uuid.uuid4())
         db_event = Event(

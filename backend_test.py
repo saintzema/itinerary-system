@@ -454,14 +454,19 @@ def main():
     # Get the backend URL from the frontend .env file
     backend_url = "https://56489903-c601-4eff-a5d5-02aeda2baf0e.preview.emergentagent.com"
     
+    print(f"Using backend URL: {backend_url}")
+    
     # Run the tests
     tester = ItineraryAPITester(backend_url)
     
     # Try to create a test user first
     print("\n🔍 Creating test user...")
     if not tester.test_register():
-        print("❌ User registration failed, stopping tests")
-        return 1
+        print("❌ User registration failed, trying to login with existing user")
+        # Try to continue with login
+        if not tester.test_login():
+            print("❌ Login also failed, stopping tests")
+            return 1
     
     return tester.run_all_tests()
 

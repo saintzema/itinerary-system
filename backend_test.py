@@ -327,79 +327,41 @@ class ItineraryAPITester:
                 return True
         return False
         
-    def test_check_conflicts_endpoint(self):
-        """Test the check-conflicts endpoint directly"""
-        # First create an event
-        if not self.event_id:
-            start_time = datetime.utcnow() + timedelta(hours=3)
-            end_time = start_time + timedelta(hours=1)
+    def test_mark_notification_as_read(self):
+        """Test marking a notification as read"""
+        if not self.notification_id:
+            print("❌ No notification ID available for testing")
+            return False
             
-            data = {
-                "title": "Base Event for Conflict Check",
-                "description": "This is a test event for conflict checking",
-                "start_time": start_time.isoformat(),
-                "end_time": end_time.isoformat(),
-                "venue": "Test Venue",
-                "priority": "medium",
-                "recurrence": "none"
-            }
-            
-            success, response = self.run_test(
-                "Create Base Event for Conflict Check",
-                "POST",
-                "events",
-                200,
-                data=data
-            )
-            
-            if success and "id" in response:
-                self.event_id = response["id"]
-                print(f"Created base event with ID: {self.event_id}")
-            else:
-                print("❌ Failed to create base event for conflict check")
-                return False
-        
-        # Now check for conflicts with a time that overlaps
-        conflict_start = datetime.utcnow() + timedelta(hours=3, minutes=30)
-        conflict_end = conflict_start + timedelta(hours=1)
-        
-        data = {
-            "start_time": conflict_start.isoformat(),
-            "end_time": conflict_end.isoformat(),
-            "event_id": None  # No event ID means we're checking for a new event
-        }
-        
-        success, response = self.run_test(
-            "Check Conflicts",
-            "POST",
-            "check-conflicts",
-            200,
-            data=data
+        success, _ = self.run_test(
+            "Mark Notification as Read",
+            "PUT",
+            f"notifications/{self.notification_id}/read",
+            200
         )
         
         if success:
-            has_conflict = response.get("has_conflict", False)
-            conflicts = response.get("conflicts", [])
-            suggested_slots = response.get("suggested_slots", [])
+            # Verify the notification is now marked as read
+            get_success, response = self.run_test(
+                "Verify Notification Read Status",
+                "GET",
+                "notifications",
+                200
+            )
             
-            print(f"Has conflict: {has_conflict}")
-            print(f"Number of conflicts: {len(conflicts)}")
-            print(f"Number of suggested slots: {len(suggested_slots)}")
+            if get_success and isinstance(response, list):
+                for notification in response:
+                    if notification["id"] == self.notification_id:
+                        if notification["status"] == "read":
+                            print("✅ Notification successfully marked as read")
+                            return True
+                        else:
+                            print("❌ Notification not marked as read")
+                            return False
             
-            if has_conflict and len(conflicts) > 0:
-                print("✅ Conflicts correctly detected")
-                
-                if len(suggested_slots) > 0:
-                    print("✅ Alternative time slots suggested")
-                    for i, slot in enumerate(suggested_slots[:3]):  # Show first 3 slots
-                        print(f"  Slot {i+1}: {slot.get('date')} {slot.get('time_range')}")
-                else:
-                    print("❌ No alternative time slots suggested")
-                
-                return True
-            else:
-                print("❌ No conflicts detected when there should be")
-                return False
+            print("❌ Could not verify notification read status")
+            return False
+        
         return False
 
     def run_all_tests(self):

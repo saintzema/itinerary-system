@@ -1607,6 +1607,23 @@ function CreateEvent() {
           : "",
         participants: eventToEdit.participants || []
       });
+    } else if (location.state?.aiParsed && location.state?.eventData) {
+      // Handle AI-parsed data
+      const aiData = location.state.eventData;
+      setMessage(location.state.message || "AI parsed your event");
+      setMessageType(location.state.messageType || "info");
+      
+      setFormData({
+        title: aiData.title || "",
+        description: aiData.description || "",
+        start_time: aiData.start_time || formatDateTimeForInput(now),
+        end_time: aiData.end_time || formatDateTimeForInput(oneHourLater),
+        venue: aiData.venue || "",
+        priority: aiData.priority || "medium",
+        recurrence: "none",
+        recurrence_end_date: "",
+        participants: []
+      });
     }
   }, [location.state]);
 

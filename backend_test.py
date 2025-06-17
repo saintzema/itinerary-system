@@ -415,13 +415,23 @@ class ItineraryAPITester:
             
         if not self.test_get_user_profile():
             print("❌ Getting user profile failed")
-            
+        
+        # Test new features
+        print("\n🧠 Testing Natural Language Event Parsing...")
+        if not self.test_parse_natural_language_event():
+            print("❌ Natural language parsing failed")
+        
         # Test event management
         if not self.test_create_event():
             print("❌ Event creation failed, skipping related tests")
         else:
             self.test_get_events()
             self.test_get_event_by_id()
+            
+            # Test conflict detection
+            print("\n⚠️ Testing Conflict Detection...")
+            self.test_check_conflicts_endpoint()
+            self.test_create_conflicting_events()
             
             # Test notifications after creating an event
             print("\n📬 Testing Notifications...")

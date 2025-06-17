@@ -1266,6 +1266,279 @@ function Dashboard() {
   );
 }
 
+// Create With AI Component - Natural Language Event Creation
+function CreateWithAI() {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [parsedEvent, setParsedEvent] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const navigate = useNavigate();
+
+  const handleParseText = async () => {
+    if (!text.trim()) {
+      setError("Please enter some text to parse");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API}/parse-event`,
+        { text: text.trim() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Parsed event response:", response.data);
+      setParsedEvent(response.data);
+      setShowPreview(true);
+    } catch (error) {
+      console.error("Error parsing event text:", error);
+      if (error.response && error.response.data) {
+        setError(error.response.data.detail || "Failed to parse event text");
+      } else {
+        setError("Failed to parse event text. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateEvent = () => {
+    if (!parsedEvent) return;
+
+    // Navigate to create event page with parsed data
+    navigate("/create-event", {
+      state: {
+        aiParsed: true,
+        eventData: {
+          title: parsedEvent.title || "",
+          description: parsedEvent.description || "",
+          start_time: parsedEvent.start_time 
+            ? new Date(parsedEvent.start_time).toISOString().slice(0, 16)
+            : "",
+          end_time: parsedEvent.end_time 
+            ? new Date(parsedEvent.end_time).toISOString().slice(0, 16)
+            : "",
+          venue: parsedEvent.venue || "",
+          priority: parsedEvent.priority || "medium"
+        },
+        message: `AI parsed your text with ${Math.round(parsedEvent.confidence * 100)}% confidence. Please review and adjust as needed.`,
+        messageType: "info"
+      }
+    });
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "Not specified";
+    const date = new Date(dateTimeString);
+    return date.toLocaleString();
+  };
+
+  const exampleTexts = [
+    "Schedule meeting with Sarah on Friday at 10AM for 2 hours in conference room A",
+    "Lunch with John tomorrow at 1PM at the downtown restaurant",
+    "Team standup daily at 9:30 AM starting next Monday",
+    "Client presentation next Thursday 2-4 PM in the main conference room",
+    "Birthday party for Emma on Saturday at 7PM at her house"
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">Create Event with AI</h1>
+        <p className="text-gray-600 text-center mb-8">
+          Describe your event in plain English and let AI help you create it!
+        </p>
+
+        {/* Input Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Describe Your Event</h2>
+          
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label htmlFor="event-text" className="block text-sm font-medium text-gray-700 mb-2">
+              Event Description
+            </label>
+            <textarea
+              id="event-text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="e.g., Schedule meeting with John tomorrow at 2PM in conference room B"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              rows="4"
+              data-testid="ai-text-input"
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Be as specific as possible about the time, date, location, and duration
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleParseText}
+              disabled={loading || !text.trim()}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-2 px-6 rounded transition-colors"
+              data-testid="parse-event-button"
+            >
+              {loading ? "Parsing..." : "Parse with AI"}
+            </button>
+            
+            <button
+              onClick={() => {
+                setText("");
+                setParsedEvent(null);
+                setShowPreview(false);
+                setError("");
+              }}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Example Section */}
+        <div className="bg-blue-50 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-3 text-blue-800">Example Phrases</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {exampleTexts.map((example, index) => (
+              <button
+                key={index}
+                onClick={() => setText(example)}
+                className="text-left p-3 bg-white rounded border hover:bg-blue-100 transition-colors text-sm"
+                data-testid={`example-${index}`}
+              >
+                "{example}"
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Preview Section */}
+        {showPreview && parsedEvent && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">AI Parsed Event</h2>
+              <div className="flex items-center">
+                <span className="text-sm text-gray-500 mr-2">Confidence:</span>
+                <div className={`px-2 py-1 rounded text-xs font-medium ${
+                  parsedEvent.confidence > 0.7 ? 'bg-green-100 text-green-800' :
+                  parsedEvent.confidence > 0.4 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {Math.round(parsedEvent.confidence * 100)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Event Details</h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Title:</span>
+                    <p className="text-gray-800">{parsedEvent.title || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Description:</span>
+                    <p className="text-gray-800">{parsedEvent.description || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Venue:</span>
+                    <p className="text-gray-800">{parsedEvent.venue || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Priority:</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      parsedEvent.priority === 'high' ? 'bg-red-100 text-red-800' :
+                      parsedEvent.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {parsedEvent.priority}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Time & Date</h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Start Time:</span>
+                    <p className="text-gray-800">{formatDateTime(parsedEvent.start_time)}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">End Time:</span>
+                    <p className="text-gray-800">{formatDateTime(parsedEvent.end_time)}</p>
+                  </div>
+                  
+                  {parsedEvent.start_time && parsedEvent.end_time && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Duration:</span>
+                      <p className="text-gray-800">
+                        {Math.round((new Date(parsedEvent.end_time) - new Date(parsedEvent.start_time)) / (1000 * 60))} minutes
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Back to Edit
+                </button>
+                
+                <button
+                  onClick={handleCreateEvent}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition-colors"
+                  data-testid="create-parsed-event-button"
+                >
+                  Create This Event
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Instructions */}
+        <div className="mt-8 bg-gray-50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-3">Tips for Better Results</h3>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <li>Include specific dates and times (e.g., "Monday at 3 PM" or "tomorrow at 10:30 AM")</li>
+            <li>Mention duration if different from 1 hour (e.g., "for 2 hours" or "30 minute meeting")</li>
+            <li>Include location details (e.g., "in conference room A" or "at the coffee shop")</li>
+            <li>Use keywords like "urgent", "important", "casual" to set priority</li>
+            <li>Be specific about who is involved (e.g., "meeting with John and Sarah")</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Create Event Component
 function CreateEvent() {
   // Initialize with default values including current date and time

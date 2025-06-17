@@ -2328,6 +2328,14 @@ function App() {
                 }
               />
               <Route
+                path="/create-with-ai"
+                element={
+                  <ProtectedRoute>
+                    <CreateWithAI />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/calendar"
                 element={
                   <ProtectedRoute>

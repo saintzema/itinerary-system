@@ -1426,6 +1426,101 @@ function CreateWithAI() {
           </div>
         </div>
 
+        {/* Preview Section - AI Parsed Event Results */}
+        {showPreview && parsedEvent && (
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">AI Parsed Event</h2>
+              <div className="flex items-center">
+                <span className="text-sm text-gray-500 mr-2">Confidence:</span>
+                <div className={`px-2 py-1 rounded text-xs font-medium ${
+                  parsedEvent.confidence > 0.7 ? 'bg-green-100 text-green-800' :
+                  parsedEvent.confidence > 0.4 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {Math.round(parsedEvent.confidence * 100)}%
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Event Details</h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Title:</span>
+                    <p className="text-gray-800">{parsedEvent.title || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Description:</span>
+                    <p className="text-gray-800">{parsedEvent.description || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Venue:</span>
+                    <p className="text-gray-800">{parsedEvent.venue || "Not specified"}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Priority:</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      parsedEvent.priority === 'high' ? 'bg-red-100 text-red-800' :
+                      parsedEvent.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {parsedEvent.priority}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Time & Date</h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">Start Time:</span>
+                    <p className="text-gray-800">{formatDateTime(parsedEvent.start_time)}</p>
+                  </div>
+                  
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">End Time:</span>
+                    <p className="text-gray-800">{formatDateTime(parsedEvent.end_time)}</p>
+                  </div>
+                  
+                  {parsedEvent.start_time && parsedEvent.end_time && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Duration:</span>
+                      <p className="text-gray-800">
+                        {Math.round((new Date(parsedEvent.end_time) - new Date(parsedEvent.start_time)) / (1000 * 60))} minutes
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition-colors"
+                >
+                  Back to Edit
+                </button>
+                
+                <button
+                  onClick={handleCreateEvent}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition-colors"
+                  data-testid="create-parsed-event-button"
+                >
+                  Create This Event
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Example Section */}
         <div className="bg-blue-50 rounded-lg p-6 mb-6">
           <h3 className="text-lg font-semibold mb-3 text-blue-800">Example Phrases</h3>

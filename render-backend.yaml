@@ -2,9 +2,12 @@ services:
   - type: web
     name: itinerary-backend
     env: python
-    runtime: python-3.10.13
     plan: free
-    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: |
+      cd backend && 
+      python --version &&
+      pip install --upgrade pip && 
+      pip install -r requirements-render.txt
     startCommand: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
       - key: DATABASE_URL
@@ -15,4 +18,6 @@ services:
         value: your-openai-api-key-here
       - key: DEBUG
         value: false
+      - key: PYTHON_VERSION
+        value: 3.10.13
     healthCheckPath: /api/health

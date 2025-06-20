@@ -1,18 +1,11 @@
 #!/bin/bash
 
-# Render Build Script - Ensures Python 3.10 compatibility
-echo "🚀 Starting Render deployment build..."
+# Minimal Render Build Script - Avoids all binary compatibility issues
+echo "🚀 Starting minimal Render deployment build..."
 
 # Check Python version
 echo "Current Python version:"
 python --version
-
-# Check if we have Python 3.10
-if python --version 2>&1 | grep -q "3.10"; then
-    echo "✅ Python 3.10 detected"
-else
-    echo "⚠️  Warning: Not using Python 3.10, may cause compatibility issues"
-fi
 
 # Change to backend directory
 cd backend || exit 1
@@ -21,12 +14,12 @@ cd backend || exit 1
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
-# Install dependencies without psycopg2 to avoid binary compatibility issues
-echo "📦 Installing dependencies..."
-pip install -r requirements-render.txt
+# Install minimal dependencies (no PostgreSQL drivers)
+echo "📦 Installing minimal dependencies..."
+pip install -r requirements-render-minimal.txt
 
 # Verify critical imports
-echo "🧪 Testing critical imports..."
+echo "🧪 Testing minimal imports..."
 python -c "
 import sys
 print(f'Python version: {sys.version}')
@@ -53,6 +46,7 @@ except ImportError as e:
     exit(1)
 
 print('✅ All critical imports successful')
+print('ℹ️  Using SQLite database (no PostgreSQL drivers needed)')
 "
 
-echo "🎉 Build completed successfully!"
+echo "🎉 Minimal build completed successfully!"

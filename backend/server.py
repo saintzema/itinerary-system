@@ -63,15 +63,29 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-
+origins = [
+    "https://itinerary-system.vercel.app",  # your frontend domain
+    "http://localhost:3000",                # optional for local dev
+]
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # NEVER use ["*"] with allow_credentials=True
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

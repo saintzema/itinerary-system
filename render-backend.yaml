@@ -11,7 +11,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: OPENAI_API_KEY
-        value: your-openai-api-key-here
+        value: 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
       - key: DEBUG
         value: false
     healthCheckPath: /api/health

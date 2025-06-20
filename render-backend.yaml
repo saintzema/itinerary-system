@@ -2,16 +2,17 @@ services:
   - type: web
     name: itinerary-backend
     env: python
+    runtime: python-3.10.13
     plan: free
     buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
     startCommand: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
-      - key: MONGO_URL
-        value: mongodb+srv://username:password@cluster.mongodb.net/
-      - key: DB_NAME
-        value: itinerary_management
+      - key: DATABASE_URL
+        value: sqlite:///./itinerary.db
       - key: SECRET_KEY
         generateValue: true
+      - key: OPENAI_API_KEY
+        value: your-openai-api-key-here
       - key: DEBUG
         value: false
     healthCheckPath: /api/health

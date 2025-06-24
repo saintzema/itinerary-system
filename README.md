@@ -9,12 +9,62 @@
 [![React](https://img.shields.io/badge/react-19.0-blue.svg)](https://reactjs.org)
 [![FastAPI](https://img.shields.io/badge/fastapi-0.110+-green.svg)](https://fastapi.tiangolo.com)
 
-### **Local Development Setup**
+### **Local Development Setup For WINDOWS**
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/saintzema/itinerary-system.git
-cd itinerary-system
+
+# 2. Setup environment files
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+Go to Backend and open the .env file, Paste the entire Open AI Key
+
+# 3. Virtual Environment Setup
+Download Python 3.9 here if not already available: 
+https://www.python.org/downloads/release/python-3913/
+
+# Create venv with Python 3.9
+py -3.9 -m venv venv
+
+# Activate (PowerShell)
+.\venv\Scripts\Activate
+
+python.exe -m pip install --upgrade pip
+
+# Backend Setup
+cd backend
+pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+
+# 4. Frontend setup (in another terminal)
+cd frontend
+npm install -g yarn
+yarn install
+yarn start
+
+# 7. Open your browser
+ Frontend: http://localhost:3000
+ Backend: http://localhost:8001/docs
+```
+
+### **Environment Configuration**
+
+**Backend** (`backend/.env`):
+```env
+# For local development, leave DATABASE_URL empty (SQLite will be used)
+DATABASE_URL=
+SECRET_KEY=your-super-secret-key-here
+DEBUG=true
+OPEN_API_KEY=
+```
+
+### **Local Development Setup For MACBOOK**
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/saintzema/itinerary-system.git
 
 # 2. Setup environment files
 cp backend/.env.example backend/.env
@@ -51,6 +101,7 @@ yarn start
 DATABASE_URL=
 SECRET_KEY=your-super-secret-key-here
 DEBUG=true
+OPEN_API_KEY=
 ```
 
 **Frontend** (`frontend/.env`):

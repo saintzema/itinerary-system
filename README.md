@@ -20,9 +20,7 @@ cd itinerary-system
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-Go to Backend and open the .env file, Paste the entire key below and remove the two quotation marks ""
-
-#OPENAI_API_KEY=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"
+Go to Backend and open the .env file, Paste the entire Open AI Key
 
 # 3. Virtual Environment Setup
 python3.9 -m venv venv

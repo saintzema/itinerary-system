@@ -1,6 +1,6 @@
 # 🗓️ Itinerary Management System
 
-> A comprehensive event scheduling and management system built with FastAPI (backend) and React (frontend), featuring real-time notifications, calendar views, and seamless user experience.
+> An AI Powered event scheduling and management system built with FastAPI (backend) and React (frontend), featuring real-time notifications, calendar views, and seamless user experience.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/yourusername/itinerary-management-system)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -8,46 +8,6 @@
 [![Node.js](https://img.shields.io/badge/node.js-16+-green.svg)](https://nodejs.org)
 [![React](https://img.shields.io/badge/react-19.0-blue.svg)](https://reactjs.org)
 [![FastAPI](https://img.shields.io/badge/fastapi-0.110+-green.svg)](https://fastapi.tiangolo.com)
-
-## ✨ Features
-
-### **Authentication & Security**
-- **Secure JWT Authentication** - Token-based authentication with automatic refresh
-- **User Registration & Login** - Complete user management system
-- **Protected Routes** - Secure API endpoints and frontend route protection
-- **Password Security** - Bcrypt password hashing and validation
-
-### **Event Management**
-- **Full CRUD Operations** - Create, read, update, and delete events
-- **Smart Calendar View** - Interactive monthly calendar with event display
-- **Priority System** - Color-coded priority levels (High, Medium, Low)
-- **Recurring Events** - Support for daily, weekly, and monthly recurrence
-- **Venue Management** - Location tracking for events
-
-### **Advanced Notifications**
-- **Real-time Sound Alerts** - Audio notifications 5 minutes before events start
-- **Browser Push Notifications** - Native browser notifications for upcoming events
-- **In-app Notification Center** - Bell icon with unread count and notification history
-- **Background Monitoring** - Continuous event time monitoring
-
-### **Modern UI/UX**
-- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
-- **Tailwind CSS** - Modern, utility-first styling with custom components
-- **Interactive Components** - Modal dialogs, dropdown menus, and form validation
-- **Loading States** - Smooth loading indicators and error boundaries
-
-### **Technical Excellence**
-- **Production Ready** - Comprehensive error handling and logging
-- **Simple Database** - SQLite for local, PostgreSQL for production
-- **Health Checks** - API health monitoring and status endpoints
-- **Easy Deployment** - Multiple deployment options with detailed guides
-
-## Quick Start
-
-### **Prerequisites**
-- **Node.js 16+** and **yarn**
-- **Python 3.11+**
-- **Git**
 
 ### **Local Development Setup**
 
@@ -60,23 +20,24 @@ cd itinerary-system
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-# 3. Backend setup
+Go to Backend and open the .env file, Paste the entire key below and remove the two quotation marks ""
+
+#OPENAI_API_KEY=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"
+
+# 3. Virtual Environment Setup
+python3.9 -m venv venv
+source venv/bin/activate
+
+pip install --upgrade pip                             
+
+# Backend Setup
 cd backend
-python3 -m venv venv
-source venv/bin/activate  
 pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8001 --reload
 
 # 4. Frontend setup (in another terminal)
 cd frontend
 yarn install
-
-# 5. Start backend (first terminal)
-cd backend
-source venv/bin/activate
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
-
-# 6. Start frontend (second terminal)
-cd frontend
 yarn start
 
 # 7. Open your browser
@@ -206,6 +167,46 @@ Similar to Option 1, but use Netlify instead of Vercel for frontend.
 - In-app notification center
 - Mark notifications as read
 
+## ✨ Features
+
+### **Authentication & Security**
+- **Secure JWT Authentication** - Token-based authentication with automatic refresh
+- **User Registration & Login** - Complete user management system
+- **Protected Routes** - Secure API endpoints and frontend route protection
+- **Password Security** - Bcrypt password hashing and validation
+
+### **Event Management**
+- **Full CRUD Operations** - Create, read, update, and delete events
+- **Smart Calendar View** - Interactive monthly calendar with event display
+- **Priority System** - Color-coded priority levels (High, Medium, Low)
+- **Recurring Events** - Support for daily, weekly, and monthly recurrence
+- **Venue Management** - Location tracking for events
+
+### **Advanced Notifications**
+- **Real-time Sound Alerts** - Audio notifications 5 minutes before events start
+- **Browser Push Notifications** - Native browser notifications for upcoming events
+- **In-app Notification Center** - Bell icon with unread count and notification history
+- **Background Monitoring** - Continuous event time monitoring
+
+### **Modern UI/UX**
+- **Responsive Design** - Works perfectly on desktop, tablet, and mobile
+- **Tailwind CSS** - Modern, utility-first styling with custom components
+- **Interactive Components** - Modal dialogs, dropdown menus, and form validation
+- **Loading States** - Smooth loading indicators and error boundaries
+
+### **Technical Excellence**
+- **Production Ready** - Comprehensive error handling and logging
+- **Simple Database** - SQLite for local, PostgreSQL for production
+- **Health Checks** - API health monitoring and status endpoints
+- **Easy Deployment** - Multiple deployment options with detailed guides
+
+## Quick Start
+
+### **Prerequisites**
+- **Node.js 16+** and **yarn**
+- **Python 3.11+**
+- **Git**
+
 ## 🔧 Configuration
 
 ### **Environment Variables**
@@ -213,6 +214,7 @@ Similar to Option 1, but use Netlify instead of Vercel for frontend.
 **Backend** (`.env`):
 ```env
 DATABASE_URL=postgresql://user:pass@host:5432/db  # Production only
+OPEN_API_KEY=
 SECRET_KEY=your-super-secret-key-here
 DEBUG=false
 ```

@@ -70,22 +70,11 @@ origins = [
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["*"],
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,  # NEVER use ["*"] with allow_credentials=True
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

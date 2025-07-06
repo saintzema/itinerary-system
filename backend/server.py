@@ -63,14 +63,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-origins = [
-    "https://aaea5a19-81b6-46bc-8858-5d7eec412e94.preview.emergentagent.com",  # current preview
-    "https://*.preview.emergentagent.com",  # any preview environment
-    "https://*.vercel.app",  # Vercel deployments
-    "https://*.onrender.com",  # Render deployments
-    "http://localhost:3000",  # local development
-    "http://127.0.0.1:3000",  # local development alternative
-]
 # CORS middleware - flexible for all deployment environments
 app.add_middleware(
     CORSMiddleware,

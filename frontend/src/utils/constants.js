@@ -13,10 +13,12 @@ export const PRIORITY_LABELS = {
 };
 
 export const RECURRENCE_OPTIONS = [
-  { value: 'none', label: 'No Recurrence' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
+  { value: 'none', label: 'No Reminders' },
+  { value: 'once_daily', label: 'Once a day' },
+  { value: 'twice_daily', label: 'Twice a day' },
+  { value: 'three_times_daily', label: '3 times a day' },
+  { value: 'four_times_daily', label: '4 times a day' },
+  { value: 'five_times_daily', label: '5 times a day' },
 ];
 
 export const ROLES = {

@@ -521,24 +521,37 @@ function Header() {
             {user ? (
               <>
                 <li>
-                  <Link to="/dashboard" className="hover:text-gray-300" data-testid="dashboard-link">Dashboard</Link>
+                  <Link to="/dashboard" className="hover:text-gray-300" data-testid="dashboard-link">
+                    Dashboard
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/calendar" className="hover:text-gray-300" data-testid="calendar-link">Calendar</Link>
+                  <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">
+                    Create Event
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">Create Event</Link>
+                  <Link to="/create-with-ai" className="hover:text-gray-300" data-testid="create-with-ai-link">
+                    Create with AI
+                  </Link>
+                </li>
+                {user.role === 'admin' && (
+                  <li>
+                    <Link to="/admin" className="hover:text-gray-300" data-testid="admin-link">
+                      Admin
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <NotificationBell user={user} />
                 </li>
                 <li>
-                  <Link to="/create-with-ai" className="hover:text-gray-300" data-testid="create-with-ai-link">Create with AI</Link>
+                  <span className="text-gray-300">Hello, {user.full_name}</span>
                 </li>
                 <li>
-                  <Notifications />
-                </li>
-                <li>
-                  <button 
-                    onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+                  <button
+                    onClick={() => logout()}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
                     data-testid="logout-button"
                   >
                     Logout
@@ -548,10 +561,14 @@ function Header() {
             ) : (
               <>
                 <li>
-                  <Link to="/login" className="hover:text-gray-300" data-testid="login-link">Login</Link>
+                  <Link to="/login" className="hover:text-gray-300" data-testid="login-link">
+                    Login
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/register" className="hover:text-gray-300" data-testid="register-link">Register</Link>
+                  <Link to="/register" className="hover:text-gray-300" data-testid="register-link">
+                    Register
+                  </Link>
                 </li>
               </>
             )}

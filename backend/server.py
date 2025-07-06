@@ -547,7 +547,7 @@ async def create_user(user: UserCreate, background_tasks: BackgroundTasks, db: S
             create_notification,
             db,
             user_id,
-            "Welcome to Itinerary Management System!",
+            "Welcome to Ezeji Itinerary System!",
             "Welcome! You can now start creating and managing your events.",
             "event_created"
         )

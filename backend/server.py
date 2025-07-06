@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Itinerary Management System API",
+    title="Ezeji Itinerary System API",
     description="A simple event scheduling system with SQLite/PostgreSQL",
     version="1.0.0",
     lifespan=lifespan

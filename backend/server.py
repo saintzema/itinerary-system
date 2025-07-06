@@ -489,7 +489,7 @@ def parse_event_fallback(text: str) -> dict:
 @app.get("/api/")
 async def root():
     """Health check endpoint"""
-    return {"message": "Hello from the Itinerary Management System API", "version": "1.0.0", "status": "healthy"}
+    return {"message": "Hello from the Ezeji Itinerary System API", "version": "1.0.0", "status": "healthy"}
 
 @app.get("/api/health")
 async def health_check(db: Session = Depends(get_db)):

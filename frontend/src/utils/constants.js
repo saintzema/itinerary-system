@@ -23,7 +23,6 @@ export const RECURRENCE_OPTIONS = [
 
 export const ROLES = {
   ADMIN: 'admin',
-  STAFF: 'staff',
   USER: 'user',
 };
 

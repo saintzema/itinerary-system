@@ -119,7 +119,7 @@ class EventBase(BaseModel):
     end_time: datetime
     venue: Optional[str] = Field(None, max_length=200)
     priority: str = Field(default="medium", pattern="^(low|medium|high)$")
-    recurrence: str = Field(default="none", pattern="^(none|daily|weekly|monthly)$")
+    recurrence: str = Field(default="none", pattern="^(none|once_daily|twice_daily|three_times_daily|four_times_daily|five_times_daily)$")
     recurrence_end_date: Optional[datetime] = None
 
 class EventCreate(EventBase):

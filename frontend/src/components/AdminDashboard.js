@@ -3,8 +3,7 @@ import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const AdminDashboard = () => {
-  const { user } = useAuth();
+const AdminDashboard = ({ user }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

@@ -514,7 +514,7 @@ function Header() {
   return (
     <header className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold" data-testid="home-link">Itinerary Management System</Link>
+        <Link to="/" className="text-xl font-bold" data-testid="home-link">Ezeji Itinerary System</Link>
         <nav>
           <ul className="flex space-x-4 items-center">
             {user ? (

@@ -64,7 +64,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 origins = [
-    "https://itinerary-system.vercel.app",  # your frontend domain
+    "https://aaea5a19-81b6-46bc-8858-5d7eec412e94.preview.emergentagent.com",  # current frontend domain
     "http://localhost:3000",                # optional for local dev
 ]
 # CORS middleware

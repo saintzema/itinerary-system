@@ -128,6 +128,12 @@ async function getUserProfile(token) {
   }
 }
 
+// Admin Dashboard Wrapper component
+function AdminDashboardWrapper() {
+  const { user } = useAuth();
+  return <AdminDashboard user={user} />;
+}
+
 // Protected Route component
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();

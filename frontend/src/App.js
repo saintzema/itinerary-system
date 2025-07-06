@@ -2598,7 +2598,7 @@ function App() {
                 path="/admin"
                 element={
                   <ProtectedRoute>
-                    <AdminDashboard />
+                    <AdminDashboardWrapper />
                   </ProtectedRoute>
                 }
               />

@@ -5,7 +5,26 @@ import axios from "axios";
 import NotificationBell from "./components/NotificationBell";
 import AdminDashboard from "./components/AdminDashboard";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Dynamic backend URL detection
+const getBackendURL = () => {
+  // If explicitly set in environment, use it
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  
+  // Auto-detect based on current location
+  const currentUrl = window.location.origin;
+  
+  // For local development
+  if (currentUrl.includes('localhost') || currentUrl.includes('127.0.0.1')) {
+    return 'http://localhost:8001';
+  }
+  
+  // For any other environment (Vercel, Render, Emergent), use same origin
+  return currentUrl;
+};
+
+const BACKEND_URL = getBackendURL();
 const API = `${BACKEND_URL}/api`;
 
 // Auth Context

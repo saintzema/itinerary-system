@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "env": {
-    "REACT_APP_BACKEND_URL": "https://your-backend-domain.onrender.com",
-    "GENERATE_SOURCEMAP": "false"
-  }
-}

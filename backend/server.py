@@ -486,6 +486,102 @@ def parse_event_fallback(text: str) -> dict:
         }
 
 # API Routes
+# Admin endpoints
+@app.get("/api/admin/users", response_model=List[UserResponse])
+async def get_all_users(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get all users (admin only)"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Access denied. Admin role required.")
+        
+        users = db.query(User).order_by(User.created_at.desc()).all()
+        
+        return [
+            UserResponse(
+                id=user.id,
+                email=user.email,
+                username=user.username,
+                full_name=user.full_name,
+                role=user.role,
+                created_at=user.created_at,
+                is_active=user.is_active
+            )
+            for user in users
+        ]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving users: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve users")
+
+@app.put("/api/admin/users/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    status_update: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user status (admin only)"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Access denied. Admin role required.")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Prevent admin from deactivating themselves
+        if user.id == current_user.id:
+            raise HTTPException(status_code=400, detail="Cannot modify your own status")
+        
+        user.is_active = status_update.get("is_active", user.is_active)
+        db.commit()
+        
+        return {"message": "User status updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user status: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update user status")
+
+@app.delete("/api/admin/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete user (admin only)"""
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Access denied. Admin role required.")
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Prevent admin from deleting themselves
+        if user.id == current_user.id:
+            raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        
+        # Delete user's events and notifications
+        db.query(Event).filter(Event.created_by == user_id).delete()
+        db.query(Notification).filter(Notification.user_id == user_id).delete()
+        
+        # Delete user
+        db.delete(user)
+        db.commit()
+        
+        return {"message": "User deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting user: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete user")
 @app.get("/api/")
 async def root():
     """Health check endpoint"""

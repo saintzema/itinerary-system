@@ -71,60 +71,11 @@ origins = [
     "http://localhost:3000",  # local development
     "http://127.0.0.1:3000",  # local development alternative
 ]
-import re
-
-# Function to validate allowed origins
-def is_allowed_origin(origin: str) -> bool:
-    """Check if the origin is allowed"""
-    allowed_patterns = [
-        r"^https://.*\.preview\.emergentagent\.com$",  # Any Emergent preview
-        r"^https://.*\.vercel\.app$",  # Any Vercel deployment
-        r"^https://.*\.onrender\.com$",  # Any Render deployment
-        r"^http://localhost:\d+$",  # Any localhost port
-        r"^http://127\.0\.0\.1:\d+$",  # Any 127.0.0.1 port
-    ]
-    
-    for pattern in allowed_patterns:
-        if re.match(pattern, origin):
-            return True
-    return False
-
-# CORS middleware with dynamic origin validation
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.cors import CORSMiddleware as StarleteCORSMiddleware
-from starlette.responses import Response
-
-class DynamicCORSMiddleware(StarleteCORSMiddleware):
-    def __init__(self, app, **kwargs):
-        # Remove allow_origins from kwargs as we'll handle it dynamically
-        kwargs.pop('allow_origins', None)
-        super().__init__(app, allow_origins=[], **kwargs)
-    
-    async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-
-        # Get the origin from headers
-        headers = dict(scope.get("headers", []))
-        origin = headers.get(b"origin", b"").decode("utf-8")
-        
-        # Check if origin is allowed
-        if origin and is_allowed_origin(origin):
-            # Temporarily set allowed origins for this request
-            self.allow_origins = [origin]
-            self.allow_all_origins = False
-        else:
-            # Allow localhost for local development
-            self.allow_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-            self.allow_all_origins = False
-        
-        await super().__call__(scope, receive, send)
-
-# Add the dynamic CORS middleware
+# CORS middleware - flexible for all deployment environments
 app.add_middleware(
-    DynamicCORSMiddleware,
-    allow_credentials=True,
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development and deployment flexibility
+    allow_credentials=False,  # Must be False when using allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )

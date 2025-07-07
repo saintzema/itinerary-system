@@ -42,6 +42,9 @@ dist/
 *.sqlite
 *.sqlite3
 
+# BUT allow the main application database to be committed for immediate functionality
+!ezeji_itinerary.db
+
 # Logs
 logs/
 *.log

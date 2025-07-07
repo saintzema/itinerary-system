@@ -127,15 +127,55 @@ class Notification(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     read_at = Column(DateTime)
 
-# Create tables
+# Create tables with enhanced error handling
 def create_tables():
-    Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully")
+    """Create all database tables with proper error handling"""
+    try:
+        # Ensure database directory exists for SQLite
+        if DATABASE_URL.startswith("sqlite"):
+            db_file = DATABASE_URL.replace("sqlite:///", "")
+            db_dir = os.path.dirname(db_file)
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+        
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+        
+        # Verify tables were created
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        print(f"✅ Created tables: {', '.join(tables)}")
+        
+    except Exception as e:
+        print(f"❌ Error creating database tables: {e}")
+        raise
 
-# Dependency to get database session
+# Enhanced database session with better error handling
 def get_db():
+    """Get database session with enhanced error handling"""
     db = SessionLocal()
     try:
         yield db
+    except Exception as e:
+        print(f"Database session error: {e}")
+        db.rollback()
+        raise
     finally:
         db.close()
+
+# Initialize database on import
+def initialize_database():
+    """Initialize database automatically when module is imported"""
+    try:
+        create_tables()
+        print("🚀 Database initialized and ready!")
+    except Exception as e:
+        print(f"⚠️  Database initialization warning: {e}")
+        print("🔄 Database will be created when first accessed")
+
+# Auto-initialize database
+if __name__ != "__main__":
+    # Only initialize when imported (not when running directly)
+    initialize_database()

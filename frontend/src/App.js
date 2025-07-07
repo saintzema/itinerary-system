@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, us
 import axios from "axios";
 import NotificationBell from "./components/NotificationBell";
 import AdminDashboard from "./components/AdminDashboard";
+import { RECURRENCE_OPTIONS } from "./utils/constants";
 
 // Dynamic backend URL detection
 const getBackendURL = () => {

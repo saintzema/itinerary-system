@@ -1255,7 +1255,7 @@ function Dashboard() {
                     <div>
                       <p className="text-xs text-gray-500">Recurrence</p>
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {selectedEvent.recurrence.charAt(0).toUpperCase() + selectedEvent.recurrence.slice(1)}
+                        {getRecurrenceLabel(selectedEvent.recurrence)}
                       </div>
                     </div>
                   )}

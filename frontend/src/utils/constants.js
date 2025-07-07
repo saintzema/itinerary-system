@@ -14,11 +14,34 @@ export const PRIORITY_LABELS = {
 
 export const RECURRENCE_OPTIONS = [
   { value: 'none', label: 'No Reminders' },
+  
+  // Daily frequency options
   { value: 'once_daily', label: 'Once a day' },
   { value: 'twice_daily', label: 'Twice a day' },
   { value: 'three_times_daily', label: '3 times a day' },
   { value: 'four_times_daily', label: '4 times a day' },
   { value: 'five_times_daily', label: '5 times a day' },
+  { value: 'six_times_daily', label: '6 times a day' },
+  { value: 'eight_times_daily', label: '8 times a day' },
+  { value: 'ten_times_daily', label: '10 times a day' },
+  
+  // Hourly options
+  { value: 'every_hour', label: 'Every hour' },
+  { value: 'every_2_hours', label: 'Every 2 hours' },
+  { value: 'every_3_hours', label: 'Every 3 hours' },
+  { value: 'every_4_hours', label: 'Every 4 hours' },
+  { value: 'every_6_hours', label: 'Every 6 hours' },
+  { value: 'every_8_hours', label: 'Every 8 hours' },
+  { value: 'every_12_hours', label: 'Every 12 hours' },
+  
+  // Weekly options
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'twice_weekly', label: 'Twice a week' },
+  { value: 'three_times_weekly', label: '3 times a week' },
+  
+  // Custom intervals
+  { value: 'every_30_minutes', label: 'Every 30 minutes' },
+  { value: 'every_15_minutes', label: 'Every 15 minutes' },
 ];
 
 export const ROLES = {

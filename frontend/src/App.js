@@ -6,6 +6,12 @@ import NotificationBell from "./components/NotificationBell";
 import AdminDashboard from "./components/AdminDashboard";
 import { RECURRENCE_OPTIONS } from "./utils/constants";
 
+// Helper function to get recurrence display label
+const getRecurrenceLabel = (recurrenceValue) => {
+  const option = RECURRENCE_OPTIONS.find(opt => opt.value === recurrenceValue);
+  return option ? option.label : recurrenceValue.charAt(0).toUpperCase() + recurrenceValue.slice(1);
+};
+
 // Dynamic backend URL detection
 const getBackendURL = () => {
   // If explicitly set in environment, use it

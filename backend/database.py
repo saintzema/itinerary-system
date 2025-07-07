@@ -7,32 +7,80 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database URL - SQLite for local, PostgreSQL for production
-DATABASE_URL = os.getenv("DATABASE_URL")
+from sqlalchemy import create_engine, Column, String, DateTime, Text, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+import os
+from dotenv import load_dotenv
 
-if not DATABASE_URL:
-    # Local development - SQLite (no setup required)
-    DATABASE_URL = "sqlite:///./itinerary.db"
-    print("Using SQLite database for local development")
-else:
-    # Production - PostgreSQL (provided by Render)
-    print("Using PostgreSQL database for production")
-    # Fix for Render PostgreSQL URL
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+load_dotenv()
 
-# Create engine
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    try:
-        # Try to create PostgreSQL engine
-        engine = create_engine(DATABASE_URL)
-    except Exception as e:
-        print(f"PostgreSQL connection failed: {e}")
-        print("Falling back to SQLite...")
-        DATABASE_URL = "sqlite:///./itinerary.db"
-        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Universal SQLite Database Configuration
+# Works out-of-the-box for local development, GitHub clones, and all deployments
+def get_database_url():
+    """Get database URL with fallback to SQLite for maximum compatibility"""
+    
+    # Check for production database URL (Vercel, Render, Railway, etc.)
+    database_url = os.getenv("DATABASE_URL")
+    
+    if database_url:
+        print(f"Using production database: {database_url[:20]}...")
+        # Fix PostgreSQL URL format if needed
+        if database_url.startswith("postgres://"):
+            database_url = database_url.replace("postgres://", "postgresql://", 1)
+        return database_url
+    
+    # Default to SQLite for all other cases (local, GitHub, simple deployments)
+    sqlite_path = "sqlite:///./ezeji_itinerary.db"
+    print("Using SQLite database (no setup required)")
+    return sqlite_path
+
+DATABASE_URL = get_database_url()
+
+# Create engine with optimal SQLite settings
+def create_database_engine():
+    """Create database engine with proper configuration"""
+    
+    if DATABASE_URL.startswith("sqlite"):
+        # SQLite configuration - optimized for development and production
+        engine = create_engine(
+            DATABASE_URL, 
+            connect_args={
+                "check_same_thread": False,  # Allow multiple threads
+                "timeout": 20,  # 20 second timeout
+            },
+            pool_pre_ping=True,  # Verify connections before use
+            echo=False  # Set to True for SQL debugging
+        )
+    else:
+        # PostgreSQL configuration for production
+        try:
+            engine = create_engine(
+                DATABASE_URL,
+                pool_pre_ping=True,
+                pool_recycle=300,  # Recycle connections every 5 minutes
+                echo=False
+            )
+            # Test the connection
+            with engine.connect() as conn:
+                conn.execute("SELECT 1")
+            print("PostgreSQL connection successful")
+        except Exception as e:
+            print(f"PostgreSQL connection failed: {e}")
+            print("Falling back to SQLite...")
+            # Fallback to SQLite if PostgreSQL fails
+            fallback_url = "sqlite:///./ezeji_itinerary.db"
+            engine = create_engine(
+                fallback_url,
+                connect_args={"check_same_thread": False, "timeout": 20},
+                pool_pre_ping=True
+            )
+    
+    return engine
+
+# Initialize engine
+engine = create_database_engine()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

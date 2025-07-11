@@ -559,6 +559,11 @@ function Header() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/calendar" className="hover:text-gray-300" data-testid="calendar-link">
+                    Calendar
+                  </Link>
+                </li>
+                <li>
                   <Link to="/create-event" className="hover:text-gray-300" data-testid="create-event-link">
                     Create Event
                   </Link>
